@@ -3,22 +3,22 @@ import logging
 import click
 from click import Command, Group
 
-from stactools.ephemeral import stac
+from stactools.fws_nwi import stac
 
 logger = logging.getLogger(__name__)
 
 
-def create_ephemeralcmd_command(cli: Group) -> Command:
-    """Creates the stactools-ephemeral command line utility."""
+def create_fwsnwi_command(cli: Group) -> Command:
+    """Creates the stactools-fws-nwi command line utility."""
 
     @cli.group(
-        "ephemeralcmd",
-        short_help=("Commands for working with stactools-ephemeral"),
+        "fws-nwi",
+        short_help=("Commands for working with stactools-fws-nwi"),
     )
-    def ephemeralcmd() -> None:
+    def fwsnwi() -> None:
         pass
 
-    @ephemeralcmd.command(
+    @fwsnwi.command(
         "create-collection",
         short_help="Creates a STAC collection",
     )
@@ -37,7 +37,7 @@ def create_ephemeralcmd_command(cli: Group) -> Command:
 
         return None
 
-    @ephemeralcmd.command("create-item", short_help="Create a STAC item")
+    @fwsnwi.command("create-item", short_help="Create a STAC item")
     @click.argument("source")
     @click.argument("destination")
     def create_item_command(source: str, destination: str) -> None:
@@ -53,4 +53,4 @@ def create_ephemeralcmd_command(cli: Group) -> Command:
 
         return None
 
-    return ephemeralcmd
+    return fwsnwi

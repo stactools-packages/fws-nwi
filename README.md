@@ -9,9 +9,13 @@
 - Dataset homepage:
   - <https://www.fws.gov/program/national-wetlands-inventory>
 - STAC extensions used:
+  - [FWS NWI](./extension/README.md)
+  - [processing](https://github.com/stac-extensions/processing/)
+  - [projection](https://github.com/stac-extensions/projection/)
   - [proj](https://github.com/stac-extensions/projection/)
+  - [table](https://github.com/stac-extensions/table/) (for geoparquet only)
 - Extra fields:
-  - `fws-nwi:custom`: A custom attribute
+  - See the [FWS NWI Extension Specification](./extension/README.md)
 
 stactools package for the National Wetlands Inventory (NWI) product
 provided by the U.S. Fish and Wildlife Service (FWS).
@@ -59,7 +63,7 @@ stac fws-nwi create-collection --help
 Create an item:
 
 ```shell
-stac fws-nwi create-item /path/to/source/file.abc item.json --collection collection.json
+stac fws-nwi create-item /path/to/source/file.zip item.json --collection collection.json
 ```
 
 Get information about all options for item creation:

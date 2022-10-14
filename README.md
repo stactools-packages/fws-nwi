@@ -13,7 +13,7 @@
   - [processing](https://github.com/stac-extensions/processing/)
   - [projection](https://github.com/stac-extensions/projection/)
   - [proj](https://github.com/stac-extensions/projection/)
-  - [table](https://github.com/stac-extensions/table/) (for geoparquet only)
+  - [table](https://github.com/stac-extensions/table/)
 - Extra fields:
   - See the [FWS NWI Extension Specification](./extension/README.md)
 

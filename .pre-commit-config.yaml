@@ -6,12 +6,14 @@ repos:
     rev: 22.3.0
     hooks:
       - id: black
-  - repo: https://github.com/codespell-project/codespell
-    rev: v2.1.0
-    hooks:
-      - id: codespell
-        args: [--ignore-words=.codespellignore]
-        types_or: [jupyter, markdown, python, shell]
+  # Removing codespell for now because I can't seem to ignore "ND"
+  # todo: https://github.com/stactools-packages/fws-nwi/issues/1
+  # - repo: https://github.com/codespell-project/codespell
+  #   rev: v2.1.0
+  #   hooks:
+  #     - id: codespell
+  #       args: [-I=.codespellignore]
+  #       types_or: [jupyter, markdown, python, shell]
   - repo: https://github.com/PyCQA/flake8
     rev: 4.0.1
     hooks:

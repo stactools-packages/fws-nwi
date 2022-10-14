@@ -92,12 +92,19 @@ def create_fwsnwi_command(cli: Group) -> Command:
         default=False,
         help="Does not include the shapefile in the created metadata if set to `TRUE`.",
     )
+    @click.option(
+        "--datetime",
+        default="",
+        help="The datetime for the Item, defaults to now. "
+        "Datetimes consist of a date and time in UTC and must be follow RFC 3339, section 5.6.",
+    )
     def create_item_command(
         source: str,
         destination: str,
         collection: str = "",
         nogeoparquet: bool = False,
         noshp: bool = False,
+        datetime: str = "",
     ) -> None:
         """Creates a STAC Item
 
@@ -109,7 +116,7 @@ def create_fwsnwi_command(cli: Group) -> Command:
         if len(collection) > 0:
             stac_collection = Collection.from_file(collection)
 
-        item = stac.create_item(source, stac_collection, nogeoparquet, noshp)
+        item = stac.create_item(source, stac_collection, nogeoparquet, noshp, datetime)
         item.save_object(dest_href=destination)
 
         return None

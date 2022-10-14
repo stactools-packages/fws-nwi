@@ -11,9 +11,8 @@
 - STAC extensions used:
   - [FWS NWI](./extension/README.md)
   - [processing](https://github.com/stac-extensions/processing/)
-  - [projection](https://github.com/stac-extensions/projection/)
   - [proj](https://github.com/stac-extensions/projection/)
-  - [table](https://github.com/stac-extensions/table/)
+  - [table](https://github.com/stac-extensions/table/) (for geoparquet only)
 - Extra fields:
   - See the [FWS NWI Extension Specification](./extension/README.md)
 

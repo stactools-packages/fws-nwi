@@ -7,7 +7,6 @@ from datetime import datetime, timezone
 from typing import List, Optional
 
 import pyproj
-import shapefile
 from dateutil.parser import isoparse
 from pystac import (
     Asset,
@@ -178,8 +177,6 @@ def create_item(
 
         # Detect data files because the file contet varies a lot
         content = parse(shapefiles, code, folder)
-        print(content)
-
         content_flags = []
         for t in Types:
             if len(content[t].files) > 0:
@@ -246,21 +243,18 @@ def create_item(
 
         # Assets
         if not nogeoparquet:
+            target_folder = os.path.dirname(asset_href)
+            # Add the extension upfront so that we don't need to write spaghetti code
+            # https://github.com/stac-utils/pystac/issues/793
+            TableExtension.ext(item, add_if_missing=True)
             for t in Types:
-                for file in content[t].files:
-                    asset_dict = parquet.create_asset_metadata(t, file)
-                    asset = Asset.from_dict(asset_dict)
-                    item.add_asset(os.path.basename(file), asset)  # todo
-                    with shapefile.Reader(file) as reader:
-                        # target_folder = os.path.dirname(asset_href)
-                        # asset = parquet.convert(reader, target_folder)
-                        table = TableExtension.ext(asset, add_if_missing=True)
-                        table.row_count = len(reader.records())
+                assets = parquet.convert(content[t].files, t, target_folder)
+                for key in assets:
+                    item.add_asset(key, assets[key])
 
         if not noshp:
             asset_dict = shp.create_asset_metadata(asset_href)
-            asset = Asset.from_dict(asset_dict)
-            item.add_asset(constants.SHP_KEY, asset)
+            item.add_asset(constants.SHP_KEY, Asset.from_dict(asset_dict))
 
         return item
 

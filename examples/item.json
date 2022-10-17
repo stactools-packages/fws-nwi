@@ -1049,7 +1049,7 @@
     }
   ],
   "assets": {
-    "geoparquet_wetlands": {
+    "wetlands": {
       "href": "wetlands.parquet",
       "type": "application/x-parquet",
       "title": "Wetlands GeoParquet file",
@@ -1057,36 +1057,34 @@
       "table:columns": [
         {
           "name": "geometry",
-          "type": "MultiPolygon"
+          "type": "polygon"
         },
         {
           "name": "attribute",
-          "type": "string",
-          "description": "**Alphanumeric code identifying the wetland classification of the polygon.**\nThe wetland classification codes are a series of letter and number codes that have been developed to adapt the national wetland classification system to map form. These alpha-numeric codes correspond to the classification nomenclature (Cowardin et al. 1979) that best describes the habitat. (for example, PFO1A). For information on the wetland codes visit: <https://www.fws.gov/wetlands/Data/Wetland-Codes.html>."
+          "type": "string"
         },
         {
           "name": "wetland_ty",
-          "type": "string",
-          "description": "**General description of the wetland based on the Cowardin wetland classification.**.\n..."
+          "type": "string"
         },
         {
           "name": "acres",
-          "type": "double",
-          "description": "**Calculated in an Albers Equal Area projection using ESRI's geometry calculator.**\nNumerical value in decimal form."
+          "type": "float"
         },
         {
           "name": "shape_leng",
-          "type": "double"
+          "type": "float"
         },
         {
           "name": "shape_area",
-          "type": "double"
+          "type": "float"
         }
       ],
       "table:row_count": 300098,
       "roles": [
         "data",
-        "cloud-optimized"
+        "cloud-optimized",
+        "wetlands"
       ]
     },
     "source": {

@@ -81,17 +81,21 @@ def parse(shapefiles: List[str], code: str, folder: str) -> Dict[Types, TypeFile
     return content
 
 
-def wetlands_area_name(path: str) -> str:
+def parse_name(path: str, content_type: Types) -> str:
     name = os.path.basename(path)[0:-4]  # basename and remove .shp extension
 
+    if content_type != Types.WETLANDS:
+        return content_type.value
+
+    # WETLANDS ONLY:
     # This is the only outlier right now, handle it specifically
     if name == "South_Dakota_East":
-        return "East"
+        return "Wetlands East"
 
-    # Detect from usual file names by finding the text after _Wetlands and then
+    # Detect from usual file names by finding the text after e.g. Wetlands_ and then
     # converting the different casing methods (camel/snake case)
-    index = name.find("_Wetlands") + 1
-    if index > 0:
+    index = name.find(f"{content_type.value}_")
+    if index > -1:
         # Extract variable part from string (can be camel case or snake case)
         # snake case in this case has the first letter of a word being uppercased
         area = name[index:]
@@ -100,5 +104,5 @@ def wetlands_area_name(path: str) -> str:
         # convert from camel case to "normal text"
         area = CAMEL_CASE_PATTERN.sub(" ", area)
         return area
-
-    return "Wetlands"
+    else:
+        return "Wetlands"

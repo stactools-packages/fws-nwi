@@ -1,6 +1,6 @@
 import logging
 import os
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional
 
 import shapefile
 from pystac import Item, Link
@@ -35,6 +35,23 @@ def create_asset_metadata(href: str) -> Dict[str, Any]:
     return asset
 
 
+def get_type(field: List[Any]) -> Optional[str]:
+    type = field[1]
+    if type == "C":
+        return "string"
+    elif type == "N" or type == "F":
+        if field[3] == 0:  # decimal length = 0 => int
+            return "int"
+        else:
+            return "float"
+    elif type == "L":
+        return "boolean"
+    elif type == "D":
+        return "datetime"
+    else:
+        return None
+
+
 def get_geometry(path: str, fallback: Optional[str] = None) -> Polygon:
     if os.path.exists(path):
         with shapefile.Reader(path) as shp:
@@ -67,10 +84,11 @@ def get_lineage(path: str, content_type: Types) -> str:
                 if link is not None and len(link) > 0 and link != "None":
                     name = f"[{name}]({link})"
 
-                status = record["STATUS"]
-                year = record["IMAGE_YR"]
-                cat = record["DATA_CAT"]
-                heading = f"**{name}** ({status}, {year}, {cat})"
+                details = [record["STATUS"], str(record["IMAGE_YR"])]
+                if "DATA_CAT" in record:
+                    details.append(record["DATA_CAT"])
+                details_formatted = ", ".join(details)
+                heading = f"**{name}** ({details_formatted})"
 
                 src = record["DATA_SOURC"]
                 if src is not None and len(src) > 0:

@@ -16,6 +16,14 @@ DESCRIPTION = (
     " data). This allows the user to clip the data to their specific analysis datasets."
     " Beware that two adjacent states will contain some of the same data along their borders."
 )
+# Bounding boxes - note: crosses the antimeridian!
+COLLECTION_BBOXES = [
+    # Union
+    [-64.54958, 13.16667, 144.6, 71.99633],
+    # Split into two parts as it crosses the antimeridian
+    [144.6, 13.16667, 180.0, 71.99633],
+    [-180.0, 13.16667, -64.54958, 71.99633],
+]
 
 PROVIDER_USFWS = Provider(
     name="U.S. Fish and Wildlife Service",
@@ -82,8 +90,6 @@ CRS = 5070
 GEOM_CRS = "EPSG:5070"
 
 # Assets
-PARQUET_TITLE_WETLANDS = "Wetlands GeoParquet file"
-PARQUET_KEY_WETLANDS = "geoparquet_wetlands"
 PARQUET_MEDIA_TYPE = "application/x-parquet"
 PARQUET_ROLES = ["data", "cloud-optimized"]
 PARQUET_GEOMETRY_COL = "geometry"
@@ -95,33 +101,3 @@ SHP_DESCRIPTION = (
 SHP_MEDIA_TYPE = "application/zip"
 SHP_ROLES = ["data", "archive", "source"]
 SHP_KEY = "source"
-
-# Bounding boxes and geometries - note: crosses the antimeridian!
-COLLECTION_BBOXES = [
-    # Union
-    [-64.54958, 13.16667, 144.6, 71.99633],
-    # Split into two parts as it crosses the antimeridian
-    [144.6, 13.16667, 180.0, 71.99633],
-    [-180.0, 13.16667, -64.54958, 71.99633],
-]
-
-# Split into two polygons as propsoed by the GeoJSON spec as it crosses the antimeridian
-GEOMETRY = {
-    "type": "Polygon",
-    "coordinates": [
-        [
-            [144.6, 71.99633],
-            [144.6, 13.16667],
-            [180, 13.16667],
-            [180, 71.99633],
-            [144.6, 71.99633],
-        ],
-        [
-            [-180, 71.99633],
-            [-180, 13.16667],
-            [-64.54958, 13.16667],
-            [-64.54958, 71.99633],
-            [-180, 71.99633],
-        ],
-    ],
-}

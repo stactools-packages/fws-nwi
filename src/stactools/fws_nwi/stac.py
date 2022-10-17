@@ -15,19 +15,19 @@ from pystac import (
     Collection,
     Extent,
     Item,
-    Link,
     MediaType,
     SpatialExtent,
     Summaries,
     TemporalExtent,
 )
-from pystac.extensions.item_assets import AssetDefinition, ItemAssetsExtension
 from pystac.extensions.projection import ProjectionExtension
 from pystac.extensions.table import TableExtension
-from shapely.geometry import Polygon, shape
+from shapely.geometry import Polygon
 from shapely.ops import transform
 
-from . import constants, parquet, shp, states
+from . import constants, parquet, shp
+from .content import Types, parse
+from .states import States
 
 logger = logging.getLogger(__name__)
 
@@ -74,12 +74,13 @@ def create_collection(
 
     summaries = Summaries(
         {
-            "fws_nwi:state": states.State.names(),
-            "fws_nwi:state_code": states.State.codes(),
+            "fws_nwi:state": States.names(),
+            "fws_nwi:state_code": States.codes(),
+            "fws_nwi:content": [t.lower() for t in Types.values()],
             "proj:epsg": [constants.CRS],
         },
         # Up the maxcount, otherwise the state arrays will be omitted from output
-        maxcount=len(states.State) + 1,
+        maxcount=len(States) + 1,
     )
 
     collection = Collection(
@@ -119,21 +120,6 @@ def create_collection(
             ),
         )
 
-    item_assets = {}
-
-    if not nogeoparquet:
-        TableExtension.ext(collection, add_if_missing=True)
-        asset = parquet.create_asset_metadata(constants.PARQUET_TITLE_WETLANDS)
-        item_assets[constants.PARQUET_KEY_WETLANDS] = AssetDefinition(asset)
-
-    if not noshp:
-        TableExtension.ext(collection, add_if_missing=True)
-        asset = shp.create_asset_metadata()
-        item_assets[constants.SHP_KEY] = AssetDefinition(asset)
-
-    item_assets_attrs = ItemAssetsExtension.ext(collection, add_if_missing=True)
-    item_assets_attrs.item_assets = item_assets
-
     return collection
 
 
@@ -166,12 +152,14 @@ def create_item(
     filename, ext = os.path.splitext(os.path.basename(asset_href))
     code, ftype, domain = filename.split("_")
 
+    # Check filename for obvious issues
     if ext.lower() != ".zip":
         raise Exception(f"Please specify a ZIP file, got {ext}")
-    if code not in states.State.codes():
+    if code not in States.codes():
         raise Exception(f"Invalid state code in file name, got {code}")
     else:
-        state = states.State[code]
+        state = States[code]
+
     if ftype != "shapefile":
         raise Exception(
             f"Please specify a ZIP file containing a shapefile, got {ftype}"
@@ -179,38 +167,53 @@ def create_item(
     if domain != "wetlands":
         raise Exception(f"Expected wetlands, got {domain}")
 
+    # Open and extract zip file
     with tempfile.TemporaryDirectory() as tempdir, ziplib.ZipFile(
         asset_href, "r"
     ) as zipfile:
         zipfile.extractall(tempdir)
         folder = os.path.join(tempdir, filename)
+        # List all shapefiles that are present so that we can detect what's inside
         shapefiles = list_shapefiles(folder)
 
-        data_filename = f"{code}_Wetlands.shp"
-        data_file = os.path.join(folder, data_filename)
-        if data_filename not in shapefiles:
-            raise Exception(f"Data file '{data_file}' not available")
+        # Detect data files because the file contet varies a lot
+        content = parse(shapefiles, code, folder)
+        print(content)
 
-        state_border_filename = f"{state}.shp"
+        content_flags = []
+        for t in Types:
+            if len(content[t].files) > 0:
+                content_flags.append(t.value.lower())
+
+        # Get / Compute geometries
+        # Also specify a fallback shapefile in case a file with the state geometry
+        # is missing. Then we'll derive a geometry from the other shapefiles.
+        state_border_filename = state.replace(" ", "_") + ".shp"
         state_border_file = os.path.join(folder, state_border_filename)
-        if state_border_filename in shapefiles:
-            native_geom = load_geometry(state_border_file)
-        else:
-            raise Exception(f"Geometry file '{state_border_file}' not available")
+        fallback_file = content[Types.WETLANDS].projects
+        native_geom = shp.get_geometry(state_border_file, fallback_file)
+        wgs84_geom = toWgs84(native_geom)
 
-        meta_filename = f"{code}_Wetlands_Project_Metadata.shp"
-        meta_file = os.path.join(folder, meta_filename)
-        if meta_filename in shapefiles:
-            lineage = load_lineage(meta_file)
-        else:
-            lineage = None
-
+        # Prepare basic metadata for Item
+        extensions = [constants.NWI_EXTENSION]
         properties = {
             "title": f"{state} Wetlands",
             "fws_nwi:state": state,
             "fws_nwi:state_code": code,
-            "processing:lineage": lineage,
+            "fws_nwi:content": content_flags,
         }
+
+        # Build lineage
+        lineage = "### Projects\n\n"
+        lineage_title_length = len(lineage)
+        for t in Types:
+            lineage_file = content[t].projects
+            if lineage_file is not None:
+                lineage = lineage + shp.get_lineage(lineage_file, t)
+
+        if len(lineage) > lineage_title_length:
+            extensions.append(constants.PROCESSING_EXTENSION)
+            properties["processing:lineage"] = lineage.strip()
 
         # Time must be in UTC
         if len(item_datetime_str) == 0:
@@ -218,13 +221,9 @@ def create_item(
         else:
             item_datetime = isoparse(item_datetime_str)
 
-        wgs84_geom = toWGS84(native_geom)
-
+        # Create Item
         item = Item(
-            stac_extensions=[
-                constants.NWI_EXTENSION,
-                constants.PROCESSING_EXTENSION,
-            ],
+            stac_extensions=extensions,
             id=filename,
             properties=properties,
             geometry=wgs84_geom.__geo_interface__,
@@ -233,11 +232,11 @@ def create_item(
             collection=collection,
         )
 
-        # Add links
-        hist_filename = f"{code}_Wetlands_Historic_Map_Info.shp"
-        hist_file = os.path.join(folder, hist_filename)
-        if hist_filename in shapefiles:
-            add_archive_links(item, hist_file)
+        # Add archive links
+        for t in Types:
+            archive_file = content[t].archive
+            if archive_file is not None:
+                shp.add_archive_links(item, archive_file)
 
         # Projection
         proj_attrs = ProjectionExtension.ext(item, add_if_missing=True)
@@ -245,82 +244,28 @@ def create_item(
         proj_attrs.bbox = native_geom.bounds
         proj_attrs.geometry = native_geom.__geo_interface__
 
-        with shapefile.Reader(data_file) as reader:
-            # Assets
-            if not nogeoparquet:
-                # target_folder = os.path.dirname(asset_href)
-                # asset = parquet.convert(reader, target_folder)
-                asset_dict = parquet.create_asset_metadata(
-                    constants.PARQUET_TITLE_WETLANDS, data_file
-                )
-                asset = Asset.from_dict(asset_dict)
-                item.add_asset(constants.PARQUET_KEY_WETLANDS, asset)
-                table = TableExtension.ext(asset, add_if_missing=True)
-                table.row_count = len(reader.records())
+        # Assets
+        if not nogeoparquet:
+            for t in Types:
+                for file in content[t].files:
+                    asset_dict = parquet.create_asset_metadata(t, file)
+                    asset = Asset.from_dict(asset_dict)
+                    item.add_asset(os.path.basename(file), asset)  # todo
+                    with shapefile.Reader(file) as reader:
+                        # target_folder = os.path.dirname(asset_href)
+                        # asset = parquet.convert(reader, target_folder)
+                        table = TableExtension.ext(asset, add_if_missing=True)
+                        table.row_count = len(reader.records())
 
-            if not noshp:
-                asset_dict = shp.create_asset_metadata(asset_href)
-                asset = Asset.from_dict(asset_dict)
-                item.add_asset(constants.SHP_KEY, asset)
+        if not noshp:
+            asset_dict = shp.create_asset_metadata(asset_href)
+            asset = Asset.from_dict(asset_dict)
+            item.add_asset(constants.SHP_KEY, asset)
 
         return item
 
 
-def load_lineage(path: str) -> Optional[str]:
-    with shapefile.Reader(path) as shp:
-        records = shp.records()
-        if len(records) > 0:
-            text = "### Projects\n"
-            for record in records:
-                name = record["PROJECT_NA"]
-                link = record["SUPPMAPINF"]
-                if link is not None and len(link) > 0 and link != "None":
-                    name = f"[{name}]({link})"
-
-                status = record["STATUS"]
-                year = record["IMAGE_YR"]
-                cat = record["DATA_CAT"]
-                heading = f"**{name}** ({status}, {year}, {cat})"
-
-                src = record["DATA_SOURC"]
-                if src is not None and len(src) > 0:
-                    heading = heading + f" with data from *{src}*"
-
-                text = text + f"\n* {heading}"
-
-                comment = record["COMMENTS"]
-                if comment is not None and len(comment) > 0:
-                    text = text + f"\n    * {comment}"
-            return text
-        else:
-            return None
-
-
-def add_archive_links(item: Item, path: str) -> None:
-    with shapefile.Reader(path) as shp:
-        records = shp.records()
-        for record in records:
-            title = record["PDF_NAME"]
-            if title.lower().endswith(".pdf"):
-                title = title[0:-4]
-
-            link = Link(
-                target=record["PDF_HYPERL"],
-                media_type="application/pdf",
-                title=title,
-                rel="archives",
-            )
-            item.links.append(link)
-
-
-def load_geometry(path: str) -> Polygon:
-    with shapefile.Reader(path) as shp:
-        if len(shp) != 1:
-            raise Exception("Geometry file should only contain a single shape")
-        return shape(shp.shape(0).__geo_interface__)
-
-
-def toWGS84(geom: Polygon) -> Polygon:
+def toWgs84(geom: Polygon) -> Polygon:
     source = pyproj.CRS(constants.GEOM_CRS)
     target = pyproj.CRS("EPSG:4326")
 

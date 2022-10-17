@@ -2,7 +2,7 @@ import enum
 from typing import List
 
 
-class State(str, enum.Enum):
+class States(str, enum.Enum):
     AL = "Alabama"
     AK = "Alaska"
     AZ = "Arizona"
@@ -59,8 +59,8 @@ class State(str, enum.Enum):
 
     @classmethod
     def codes(self) -> List[str]:
-        return [i.name for i in State]
+        return [i.name for i in States]
 
     @classmethod
     def names(self) -> List[str]:
-        return [i.value for i in State]
+        return [i.value for i in States]

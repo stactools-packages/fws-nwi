@@ -18,10 +18,11 @@ See <https://www.fws.gov/program/national-wetlands-inventory> for details.
 
 ## Item Properties and Collection Summaries
 
-| Field Name         | Type   | Description                                                  |
-| ------------------ | ------ | ------------------------------------------------------------ |
-| fws_nwi:state      | string | **REQUIRED**. The applicable US state (long name). One of the [allowed values](#allowed-values) below. |
-| fws_nwi:state_code | string | **REQUIRED**. The applicable US state (short code). One of the [allowed values](#allowed-values) below. |
+| Field Name         | Type      | Description                                                  |
+| ------------------ | --------- | ------------------------------------------------------------ |
+| fws_nwi:state      | string    | **REQUIRED**. The applicable US state (long name). One of the [allowed values](#allowed-values) below. |
+| fws_nwi:state_code | string    | **REQUIRED**. The applicable US state (short code). One of the [allowed values](#allowed-values) below. |
+| fws_nwi:content    | \[string] | **REQUIRED**. The content published in this Item. A set of the following allowed values: `historic_wetlands`, `riparian`, `wetlands` |
 
 ### Allowed Values
 

@@ -28,6 +28,8 @@ from . import constants, parquet, shp
 from .content import Types, parse
 from .states import States
 
+logging.basicConfig(format="%(asctime)s %(message)s")
+
 logger = logging.getLogger(__name__)
 
 
@@ -170,12 +172,14 @@ def create_item(
     with tempfile.TemporaryDirectory() as tempdir, ziplib.ZipFile(
         asset_href, "r"
     ) as zipfile:
+        logger.info(f"Extracting archive to {tempdir}")
         zipfile.extractall(tempdir)
         folder = os.path.join(tempdir, filename)
         # List all shapefiles that are present so that we can detect what's inside
         shapefiles = list_shapefiles(folder)
+        logger.info("Extracted all files, includes " + ", ".join(shapefiles))
 
-        # Detect data files because the file contet varies a lot
+        # Detect data files because the file content varies a lot
         content = parse(shapefiles, code, folder)
         content_flags = []
         for t in Types:
@@ -260,8 +264,8 @@ def create_item(
 
 
 def toWgs84(geom: Polygon) -> Polygon:
-    source = pyproj.CRS(constants.GEOM_CRS)
-    target = pyproj.CRS("EPSG:4326")
+    source = pyproj.CRS(constants.CRS)
+    target = pyproj.CRS(4326)
 
     project = pyproj.Transformer.from_crs(source, target, always_xy=True).transform
     return transform(project, geom)

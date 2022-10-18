@@ -87,12 +87,12 @@ PROJECTION_EXTENSION = "https://stac-extensions.github.io/projection/v1.0.0/sche
 
 # Shared metadata
 CRS = 5070
-GEOM_CRS = "EPSG:5070"
 
 # Assets
 PARQUET_MEDIA_TYPE = "application/x-parquet"
 PARQUET_ROLES = ["data", "cloud-optimized"]
 PARQUET_GEOMETRY_COL = "geometry"
+PARQUET_GEOMETRY_TYPE = "Polygon"
 
 SHP_TITLE = "Original assets"
 SHP_DESCRIPTION = (

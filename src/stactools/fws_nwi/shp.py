@@ -41,9 +41,16 @@ def get_type(field: List[Any]) -> Optional[str]:
         return "string"
     elif type == "N" or type == "F":
         if field[3] == 0:  # decimal length = 0 => int
-            return "int"
-        else:
-            return "float"
+            if field[2] <= 2:
+                return "int8"
+            elif field[2] <= 4:
+                return "int16"
+            elif field[2] <= 9:
+                return "int32"
+            else:
+                return "int64"
+        else:  # floats
+            return "float64"  # ignore float16/32 for now
     elif type == "L":
         return "boolean"
     elif type == "D":
@@ -54,6 +61,7 @@ def get_type(field: List[Any]) -> Optional[str]:
 
 def get_geometry(path: str, fallback: Optional[str] = None) -> Polygon:
     if os.path.exists(path):
+        logger.info(f"Reading geometry from {path}")
         with shapefile.Reader(path) as shp:
             if len(shp) != 1:
                 raise Exception("Geometry file should only contain a single shape")
@@ -63,6 +71,7 @@ def get_geometry(path: str, fallback: Optional[str] = None) -> Polygon:
         # 1. union
         # 2. buffer (100m)
         # 3. simplifing (douglas-peucker, 1000m)
+        logger.info(f"Computing geometry from {fallback}")
         with shapefile.Reader(fallback) as shp:
             shapes = [shape(s.__geo_interface__) for s in shp.shapes()]
             return (
@@ -73,6 +82,7 @@ def get_geometry(path: str, fallback: Optional[str] = None) -> Polygon:
 
 
 def get_lineage(path: str, content_type: Types) -> str:
+    logger.info(f"Loading lineage information from {path}")
     with shapefile.Reader(path) as shp:
         records = shp.records()
         if len(records) > 0:
@@ -105,6 +115,7 @@ def get_lineage(path: str, content_type: Types) -> str:
 
 
 def add_archive_links(item: Item, path: str) -> None:
+    logger.info(f"Loading archive links from {path}")
     with shapefile.Reader(path) as shp:
         records = shp.records()
         for record in records:

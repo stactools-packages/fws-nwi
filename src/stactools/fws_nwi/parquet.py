@@ -1,9 +1,13 @@
+import json
 import logging
 import os
 from typing import Any, Dict, List, Optional
 
+import pyarrow as pa
+import pyproj
 import shapefile
-from geopandas import GeoDataFrame, GeoSeries
+import shapely
+from pyarrow.parquet import ParquetWriter
 from pystac import Asset
 from shapely.geometry import shape
 
@@ -54,45 +58,70 @@ def create_asset(src_file: str, content_type: Types, dest_folder: str) -> Asset:
     filename = os.path.basename(src_file)[0:-4]  # filename without .shp
     dest_file = os.path.join(dest_folder, f"{filename}.parquet")
 
+    logger.info(f"Opening {src_file} for conversion")
     with shapefile.Reader(src_file) as reader:
         # number of rows
         count = len(reader)
 
-        # Convert shapes
-        shapes = reader.shapes()
-        geometries = [shape(s.__geo_interface__) for s in shapes]
-
-        # Add geometry columns and data
-        table_data = {
-            constants.PARQUET_GEOMETRY_COL: GeoSeries(
-                geometries, crs=constants.GEOM_CRS
+        if reader.shapeTypeName.upper() != constants.PARQUET_GEOMETRY_TYPE.upper():
+            raise Exception(
+                (
+                    f"Unexpected shapetype '{constants.PARQUET_GEOMETRY_TYPE}', "
+                    f"got {reader.shapeTypeName}"
+                )
             )
-        }
-        table_cols = [
-            create_col(constants.PARQUET_GEOMETRY_COL, reader.shapeTypeName.lower())
+
+        # Get columns, except for ignored ones (DeletionFlag)
+        stac_table_cols = [
+            create_col(constants.PARQUET_GEOMETRY_COL, constants.PARQUET_GEOMETRY_TYPE)
         ]
-        # Add all other columns, except for DeletionFlag
+        pa_cols = [pa.field(constants.PARQUET_GEOMETRY_COL, pa.binary())]
         for field in reader.fields:
             shp_col = field[0]
             if shp_col in IGNORE_COLS:
                 continue
 
             col = shp_col.lower()
-            table_data[col] = [reader.record(i)[shp_col] for i in range(0, count)]
-            table_cols.append(create_col(col, shp.get_type(field)))
 
-        # Create a geodataframe and store it as geoparquet file
-        dataframe = GeoDataFrame(table_data)
-        dataframe.to_parquet(dest_file, version="2.6")
+            dtype = shp.get_type(field)
+            stac_table_cols.append(create_col(col, dtype))
+
+            pa_dtype = get_pyarrow_type(dtype)
+            pa_cols.append(pa.field(col, pa_dtype))
+
+        col_range = range(len(pa_cols))
+
+        # Stream chunks into geoparquet file
+        schema = pa.schema(pa_cols, metadata=encode_geoparquet_metadata())
+
+        with ParquetWriter(
+            dest_file, schema, version="2.6", compression="SNAPPY"
+        ) as writer:
+            i = 0
+            data: List[List[Any]] = [[] for _ in col_range]
+
+            for row in reader:
+                i = i + 1
+
+                geometry = shape(row.shape.__geo_interface__)
+                data[0].append(shapely.wkb.dumps(geometry))
+                for j in range(len(row.record)):
+                    data[j + 1].append(row.record[j])
+
+                if (i % 2500) == 0 or i == count:
+                    table = pa.Table.from_arrays(data, schema=schema)
+                    writer.write_table(table)
+                    data = [[] for _ in col_range]
 
         # Create asset metadata
         asset_dict = create_asset_metadata(content_type, dest_file)
         # Can't use table extension: https://github.com/stac-utils/pystac/issues/872
         asset_dict["table:primary_geometry"] = constants.PARQUET_GEOMETRY_COL
-        asset_dict["table:columns"] = table_cols
+        asset_dict["table:columns"] = stac_table_cols
         asset_dict["table:row_count"] = count
         asset = Asset.from_dict(asset_dict)
 
+        logger.info(f"Converted {src_file} to {dest_file}")
         return asset
 
 
@@ -126,3 +155,65 @@ def create_asset_metadata(content_type: Types, href: str) -> Dict[str, Any]:
     }
 
     return asset
+
+
+def get_pyarrow_type(type: Optional[str]) -> Any:
+    if type == "string":
+        return pa.string()
+    elif type == "int8":
+        return pa.int8()
+    elif type == "int16":
+        return pa.int16()
+    elif type == "int32":
+        return pa.int32()
+    elif type == "int64":
+        return pa.int64()
+    elif type == "float16":
+        return pa.float16()
+    elif type == "float32":
+        return pa.float32()
+    elif type == "float64":
+        return pa.float64()
+    elif type == "boolean":
+        return pa.bool_()
+    elif type == "datetime":
+        return pa.timestamp()
+    else:
+        raise Exception(f"Unknown datatype, got {type}")
+
+
+def encode_geoparquet_metadata() -> Dict[bytes, bytes]:
+    crs = pyproj.CRS(constants.CRS).to_json_dict()
+    crs = remove_id_from_member_of_ensembles(crs)
+
+    column_metadata = {}
+    column_metadata[constants.PARQUET_GEOMETRY_COL] = {
+        "encoding": "WKB",
+        "crs": crs,
+        "geometry_type": constants.PARQUET_GEOMETRY_TYPE,  # todo: or ["Polygon", "MultiPolygon"]?
+    }
+
+    metadata = {
+        "primary_column": constants.PARQUET_GEOMETRY_COL,
+        "columns": column_metadata,
+        "version": "0.4.0",
+    }
+    return {b"geo": json.dumps(metadata).encode("utf-8")}
+
+
+# Source: https://github.com/geopandas/geopandas/blob/v0.11.1/geopandas/io/arrow.py#L51
+def remove_id_from_member_of_ensembles(json_dict: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Older PROJ versions will not recognize IDs of datum ensemble members that
+    were added in more recent PROJ database versions.
+    Cf https://github.com/opengeospatial/geoparquet/discussions/110
+    and https://github.com/OSGeo/PROJ/pull/3221
+    Mimicking the patch to GDAL from https://github.com/OSGeo/gdal/pull/5872
+    """
+    for key, value in json_dict.items():
+        if isinstance(value, dict):
+            remove_id_from_member_of_ensembles(value)
+        elif key == "members" and isinstance(value, list):
+            for member in value:
+                member.pop("id", None)
+    return json_dict

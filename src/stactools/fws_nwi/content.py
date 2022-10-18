@@ -1,8 +1,11 @@
 import enum
+import logging
 import os
 import re
 from dataclasses import dataclass
 from typing import Dict, List, Optional
+
+logger = logging.getLogger(__name__)
 
 INCONSISTENT_DATA_FILES = [
     "Colorado_Wetlands_East",
@@ -82,7 +85,7 @@ def parse(shapefiles: List[str], code: str, folder: str) -> Dict[Types, TypeFile
 
 
 def parse_name(path: str, content_type: Types) -> str:
-    name = os.path.basename(path)[0:-4]  # basename and remove .shp extension
+    name = os.path.splitext(os.path.basename(path))[0]
 
     if content_type != Types.WETLANDS:
         return content_type.value

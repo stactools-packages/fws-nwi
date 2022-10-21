@@ -1,6 +1,7 @@
 import json
 import logging
 import os
+import struct
 from typing import Any, Dict, List, Optional
 
 import pyarrow as pa
@@ -10,7 +11,7 @@ from pyarrow.parquet import ParquetWriter
 from pyproj import CRS
 from pystac import Asset
 from pystac.extensions.projection import ProjectionExtension
-from shapely.geometry import shape
+from shapely.geometry import shape as to_geom
 
 from . import constants, shp
 from .content import Types, parse_name
@@ -105,18 +106,37 @@ def create_asset(
         with ParquetWriter(
             dest_file, schema, version="2.6", compression="SNAPPY"
         ) as writer:
-            i = 0
             data: List[List[Any]] = [[] for _ in col_range]
 
-            for row in reader:
-                i = i + 1
+            # Don't use the iterator but instead go by index and catch potential issues, primarily
+            # when the metadata count is larger than the actual count of records
+            # See: https://github.com/stactools-packages/fws-nwi/issues/2
+            for i in range(count):
+                row_num = i + 1
+                error_write = False
 
-                geometry = shape(row.shape.__geo_interface__)
-                data[0].append(shapely.wkb.dumps(geometry))
-                for j in range(len(row.record)):
-                    data[j + 1].append(row.record[j])
+                try:
+                    shape = reader.shape(i)
+                    geometry = to_geom(shape.__geo_interface__)
+                    data[0].append(shapely.wkb.dumps(geometry))
 
-                if (i % 2500) == 0 or i == count:
+                    record = reader.record(i)
+                    for j in range(len(record)):
+                        data[j + 1].append(record[j])
+                except struct.error as err:
+                    logger.warn(
+                        (
+                            "The count of records/shapes in the metadata is likely higher than the"
+                            " actual number of records/shapes. Handling this gracefully, but the"
+                            " resulting files might also be incomplete."
+                            f" Row number (zero-based): {i}"
+                            " Error: " + str(err)
+                        )
+                    )
+                    # If there's data available, write it now to avoid that the last rows get lost
+                    error_write = len(data) > 0
+
+                if (row_num % 2500) == 0 or row_num == count or error_write:
                     table = pa.Table.from_arrays(data, schema=schema)
                     writer.write_table(table)
                     data = [[] for _ in col_range]

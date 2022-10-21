@@ -5,7 +5,8 @@ from typing import Any, Dict, List, Optional, Tuple
 import shapefile
 from pyproj import CRS, Transformer
 from pystac import Item, Link
-from shapely.geometry import Polygon, shape
+from shapely.geometry import Polygon
+from shapely.geometry import shape as to_geom
 from shapely.ops import transform, unary_union
 
 from . import constants
@@ -87,7 +88,7 @@ def get_geometry(
         with shapefile.Reader(path) as shp:
             if len(shp) != 1:
                 raise Exception("Geometry file should only contain a single shape")
-            geometry = shape(shp.shape(0).__geo_interface__)
+            geometry = to_geom(shp.shape(0).__geo_interface__)
     elif fallback is not None and os.path.exists(fallback):
         # Fallback: Geometry generated from other layer (e.g. wetlands project metadata)
         # 1. union
@@ -96,7 +97,7 @@ def get_geometry(
         logger.info(f"Computing geometry from {fallback}")
         crs = get_projection(fallback)
         with shapefile.Reader(fallback) as shp:
-            shapes = [shape(s.__geo_interface__) for s in shp.shapes()]
+            shapes = [to_geom(s.__geo_interface__) for s in shp.shapes()]
             geometry = unary_union(shapes)
     else:
         raise Exception("Geometry can't be determined")

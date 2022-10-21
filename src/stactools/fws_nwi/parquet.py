@@ -39,7 +39,7 @@ def convert(
     """
     assets: Dict[str, Asset] = {}
     for file in files:
-        key = parse_name(file, content_type).replace(" ", "_").lower()
+        key = "geoparquet_" + parse_name(file, content_type).replace(" ", "_").lower()
         assets[key] = create_asset(file, content_type, dest_folder, base_crs)
 
     return assets

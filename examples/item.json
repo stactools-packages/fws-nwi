@@ -1090,7 +1090,7 @@
     "source": {
       "href": "MA_shapefile_wetlands.zip",
       "type": "application/zip",
-      "title": "Original assets",
+      "title": "Source assets in a ZIP file",
       "description": "The ZIP archive contains the original data files in ESRI Shapefile format.",
       "roles": [
         "data",

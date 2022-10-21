@@ -91,17 +91,18 @@ def get_geometry(
     elif fallback is not None and os.path.exists(fallback):
         # Fallback: Geometry generated from other layer (e.g. wetlands project metadata)
         # 1. union
-        # 2. buffer (100m)
-        # 3. simplifing (douglas-peucker, 1000m)
+        # 2. buffer (10m)
+        # 3. simplifing (douglas-peucker, 250m)
         logger.info(f"Computing geometry from {fallback}")
         crs = get_projection(fallback)
         with shapefile.Reader(fallback) as shp:
             shapes = [shape(s.__geo_interface__) for s in shp.shapes()]
-            geometry = (
-                unary_union(shapes).buffer(100).simplify(1000, preserve_topology=False)
-            )
+            geometry = unary_union(shapes)
     else:
         raise Exception("Geometry can't be determined")
+
+    # 10m buffer to close small gaps in some geometries
+    geometry = geometry.buffer(10).simplify(250, preserve_topology=True)
 
     wgs84_geometry = toWgs84(crs, geometry)
     return (geometry, wgs84_geometry, crs)
@@ -119,7 +120,11 @@ def get_lineage(path: str, content_type: Types) -> str:
         records = shp.records()
         if len(records) > 0:
             title = content_type.value.replace("_", " ")
-            text = f"#### {title}\n"
+            filename = os.path.basename(path)
+            text = (
+                f"#### {title}\n"
+                f"For all details see the file `{filename}` in the source asset.\n\n"
+            )
             for r in records:
                 record = r.as_dict()
                 name = record["PROJECT_NA"]
@@ -128,20 +133,37 @@ def get_lineage(path: str, content_type: Types) -> str:
                     name = f"[{name}]({link})"
 
                 details = [record["STATUS"], str(record["IMAGE_YR"])]
-                if "DATA_CAT" in record:
+                if (
+                    "STATUS" in record
+                    and record["STATUS"] is not None
+                    and record["STATUS"] != "No_Data"
+                ):
+                    details.append(record["STATUS"])
+
+                if "IMAGE_YR" in record and record["IMAGE_YR"] != 0:
+                    details.append(str(record["IMAGE_YR"]))
+
+                if (
+                    "DATA_CAT" in record
+                    and record["DATA_CAT"] is not None
+                    and record["DATA_CAT"] != "None"
+                ):
                     details.append(record["DATA_CAT"])
+
+                if len(name) == 0 and len(details) == 0:
+                    continue
+
+                if len(name) == 0:
+                    name = "Unnamed project"
+
                 details_formatted = ", ".join(details)
-                heading = f"**{name}** ({details_formatted})"
+                heading = f"{name} ({details_formatted})"
 
                 src = record["DATA_SOURC"]
                 if src is not None and len(src) > 0:
                     heading = heading + f" with data from *{src}*"
 
                 text = text + f"\n* {heading}"
-
-                comment = record["COMMENTS"]
-                if comment is not None and len(comment) > 0:
-                    text = text + f"\n    * {comment}"
             return text + "\n\n"
         else:
             return ""

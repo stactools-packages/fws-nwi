@@ -91,7 +91,7 @@ PARQUET_ROLES = ["data", "cloud-optimized"]
 PARQUET_GEOMETRY_COL = "geometry"
 PARQUET_GEOMETRY_TYPE = "Polygon"
 
-SHP_TITLE = "Original assets"
+SHP_TITLE = "Source assets in a ZIP file"
 SHP_DESCRIPTION = (
     "The ZIP archive contains the original data files in ESRI Shapefile format."
 )

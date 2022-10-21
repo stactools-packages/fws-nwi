@@ -4,7 +4,7 @@ import os
 import tempfile
 import zipfile as ziplib
 from datetime import datetime, timezone
-from typing import List, Optional
+from typing import Any, Dict, List, Optional
 
 from dateutil.parser import isoparse
 from pystac import (
@@ -20,6 +20,7 @@ from pystac import (
 )
 from pystac.extensions.projection import ProjectionExtension
 from pystac.extensions.table import TableExtension
+from shapely.geometry import Polygon
 
 from . import constants, parquet, shp
 from .content import Types, parse
@@ -224,8 +225,8 @@ def create_item(
             stac_extensions=extensions,
             id=filename,
             properties=properties,
-            geometry=wgs84_geom.__geo_interface__,
-            bbox=wgs84_geom.bounds,
+            geometry=to_geojson(wgs84_geom),
+            bbox=to_bbox(wgs84_geom),
             datetime=item_datetime,
             collection=collection,
         )
@@ -243,8 +244,8 @@ def create_item(
             proj_ext.projjson = geom_crs.to_json_dict()
         else:
             proj_ext.epsg = epsg
-        proj_ext.bbox = native_geom.bounds
-        proj_ext.geometry = native_geom.__geo_interface__
+        proj_ext.bbox = to_bbox(native_geom)
+        proj_ext.geometry = to_geojson(native_geom)
 
         # Assets
         if not nogeoparquet:
@@ -270,3 +271,25 @@ def list_shapefiles(folder: str) -> List[str]:
     files = glob.glob("*.shp")
     os.chdir(old_dir)
     return files
+
+
+def to_geojson(geometry: Polygon) -> Dict[str, Any]:
+    geojson: Dict[str, Any] = geometry.__geo_interface__
+    geojson["coordinates"] = set_precision(geojson["coordinates"], 5)
+    return geojson
+
+
+def to_bbox(geometry: Polygon) -> List[float]:
+    bbox: List[float] = geometry.bounds
+    bbox = set_precision(bbox, 5)
+    return bbox
+
+
+def set_precision(coords: List[Any], precision: int) -> List[Any]:
+    if isinstance(coords, int) or isinstance(coords, float):
+        return round(coords, precision)
+    else:
+        result = []
+        for coord in coords:
+            result.append(set_precision(coord, precision))
+        return result

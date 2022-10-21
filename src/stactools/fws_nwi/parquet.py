@@ -111,6 +111,7 @@ def create_asset(
             # Don't use the iterator but instead go by index and catch potential issues, primarily
             # when the metadata count is larger than the actual count of records
             # See: https://github.com/stactools-packages/fws-nwi/issues/2
+            real_count = 0
             for i in range(count):
                 row_num = i + 1
                 error_write = False
@@ -139,6 +140,7 @@ def create_asset(
                 if (row_num % 2500) == 0 or row_num == count or error_write:
                     table = pa.Table.from_arrays(data, schema=schema)
                     writer.write_table(table)
+                    real_count = real_count + len(data)
                     data = [[] for _ in col_range]
 
         # Create asset metadata
@@ -146,7 +148,7 @@ def create_asset(
         # Can't use table extension: https://github.com/stac-utils/pystac/issues/872
         asset_dict["table:primary_geometry"] = constants.PARQUET_GEOMETRY_COL
         asset_dict["table:columns"] = stac_table_cols
-        asset_dict["table:row_count"] = count
+        asset_dict["table:row_count"] = real_count
         asset = Asset.from_dict(asset_dict)
 
         # Projection info

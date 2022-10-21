@@ -1,11 +1,12 @@
 import logging
 import os
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 import shapefile
+from pyproj import CRS, Transformer
 from pystac import Item, Link
 from shapely.geometry import Polygon, shape
-from shapely.ops import unary_union
+from shapely.ops import transform, unary_union
 
 from . import constants
 from .content import Types
@@ -59,26 +60,57 @@ def get_type(field: List[Any]) -> Optional[str]:
         return None
 
 
-def get_geometry(path: str, fallback: Optional[str] = None) -> Polygon:
+def get_projection(shp_path: str) -> CRS:
+    folder = os.path.dirname(shp_path)
+    filename = os.path.splitext(os.path.basename(shp_path))[0]
+    proj_file = os.path.join(folder, f"{filename}.prj")
+    if os.path.exists(proj_file):
+        with open(proj_file, "r") as file:
+            return CRS.from_string(file.read())
+    else:
+        logger.warn(
+            f"No projection file found at {proj_file}, falling back to EPSG:6269"
+        )
+        return CRS.from_epsg(6269)
+
+
+def get_geometry(
+    path: str, fallback: Optional[str] = None
+) -> Tuple[Polygon, Polygon, CRS]:
+    # Returns as tuple:
+    #   1. Polygon in native CRS
+    #   2. Polygon in WGS84
+    #   3. Native CRS
     if os.path.exists(path):
         logger.info(f"Reading geometry from {path}")
+        crs = get_projection(path)
         with shapefile.Reader(path) as shp:
             if len(shp) != 1:
                 raise Exception("Geometry file should only contain a single shape")
-            return shape(shp.shape(0).__geo_interface__)
+            geometry = shape(shp.shape(0).__geo_interface__)
     elif fallback is not None and os.path.exists(fallback):
         # Fallback: Geometry generated from other layer (e.g. wetlands project metadata)
         # 1. union
         # 2. buffer (100m)
         # 3. simplifing (douglas-peucker, 1000m)
         logger.info(f"Computing geometry from {fallback}")
+        crs = get_projection(fallback)
         with shapefile.Reader(fallback) as shp:
             shapes = [shape(s.__geo_interface__) for s in shp.shapes()]
-            return (
+            geometry = (
                 unary_union(shapes).buffer(100).simplify(1000, preserve_topology=False)
             )
     else:
         raise Exception("Geometry can't be determined")
+
+    wgs84_geometry = toWgs84(crs, geometry)
+    return (geometry, wgs84_geometry, crs)
+
+
+def toWgs84(source_crs: CRS, geom: Polygon) -> Polygon:
+    target_crs = CRS(4326)
+    project = Transformer.from_crs(source_crs, target_crs, always_xy=True).transform
+    return transform(project, geom)
 
 
 def get_lineage(path: str, content_type: Types) -> str:
@@ -88,7 +120,8 @@ def get_lineage(path: str, content_type: Types) -> str:
         if len(records) > 0:
             title = content_type.value.replace("_", " ")
             text = f"#### {title}\n"
-            for record in records:
+            for r in records:
+                record = r.as_dict()
                 name = record["PROJECT_NA"]
                 link = record["SUPPMAPINF"]
                 if link is not None and len(link) > 0 and link != "None":

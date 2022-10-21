@@ -1057,7 +1057,7 @@
       "table:columns": [
         {
           "name": "geometry",
-          "type": "polygon"
+          "type": "Polygon"
         },
         {
           "name": "attribute",

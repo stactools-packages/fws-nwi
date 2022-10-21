@@ -225,9 +225,6 @@
       "historic_wetlands",
       "riparian",
       "wetlands"
-    ],
-    "proj:epsg": [
-      5070
     ]
   }
 }

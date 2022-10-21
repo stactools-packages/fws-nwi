@@ -6,7 +6,6 @@ import zipfile as ziplib
 from datetime import datetime, timezone
 from typing import List, Optional
 
-import pyproj
 from dateutil.parser import isoparse
 from pystac import (
     Asset,
@@ -21,8 +20,6 @@ from pystac import (
 )
 from pystac.extensions.projection import ProjectionExtension
 from pystac.extensions.table import TableExtension
-from shapely.geometry import Polygon
-from shapely.ops import transform
 
 from . import constants, parquet, shp
 from .content import Types, parse
@@ -78,7 +75,6 @@ def create_collection(
             "fws_nwi:state": States.names(),
             "fws_nwi:state_code": States.codes(),
             "fws_nwi:content": [t.lower() for t in Types.values()],
-            "proj:epsg": [constants.CRS],
         },
         # Up the maxcount, otherwise the state arrays will be omitted from output
         maxcount=len(States) + 1,
@@ -192,8 +188,9 @@ def create_item(
         state_border_filename = state.replace(" ", "_") + ".shp"
         state_border_file = os.path.join(folder, state_border_filename)
         fallback_file = content[Types.WETLANDS].projects
-        native_geom = shp.get_geometry(state_border_file, fallback_file)
-        wgs84_geom = toWgs84(native_geom)
+        native_geom, wgs84_geom, geom_crs = shp.get_geometry(
+            state_border_file, fallback_file
+        )
 
         # Prepare basic metadata for Item
         extensions = [constants.NWI_EXTENSION]
@@ -240,10 +237,14 @@ def create_item(
                 shp.add_archive_links(item, archive_file)
 
         # Projection
-        proj_attrs = ProjectionExtension.ext(item, add_if_missing=True)
-        proj_attrs.epsg = constants.CRS
-        proj_attrs.bbox = native_geom.bounds
-        proj_attrs.geometry = native_geom.__geo_interface__
+        proj_ext = ProjectionExtension.ext(item, add_if_missing=True)
+        epsg = geom_crs.to_epsg()
+        if epsg is None:
+            proj_ext.projjson = geom_crs.to_json_dict()
+        else:
+            proj_ext.epsg = epsg
+        proj_ext.bbox = native_geom.bounds
+        proj_ext.geometry = native_geom.__geo_interface__
 
         # Assets
         if not nogeoparquet:
@@ -252,7 +253,7 @@ def create_item(
             # https://github.com/stac-utils/pystac/issues/793
             TableExtension.ext(item, add_if_missing=True)
             for t in Types:
-                assets = parquet.convert(content[t].files, t, target_folder)
+                assets = parquet.convert(content[t].files, t, target_folder, geom_crs)
                 for key in assets:
                     item.add_asset(key, assets[key])
 
@@ -263,17 +264,9 @@ def create_item(
         return item
 
 
-def toWgs84(geom: Polygon) -> Polygon:
-    source = pyproj.CRS(constants.CRS)
-    target = pyproj.CRS(4326)
-
-    project = pyproj.Transformer.from_crs(source, target, always_xy=True).transform
-    return transform(project, geom)
-
-
 def list_shapefiles(folder: str) -> List[str]:
     old_dir = os.getcwd()
     os.chdir(folder)
-    shapefiles = glob.glob("*.shp")
+    files = glob.glob("*.shp")
     os.chdir(old_dir)
-    return shapefiles
+    return files

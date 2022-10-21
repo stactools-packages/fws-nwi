@@ -85,9 +85,6 @@ PROCESSING_EXTENSION = "https://stac-extensions.github.io/processing/v1.1.0/sche
 # For summaries, until supported: https://github.com/stac-utils/pystac/issues/890
 PROJECTION_EXTENSION = "https://stac-extensions.github.io/projection/v1.0.0/schema.json"
 
-# Shared metadata
-CRS = 5070
-
 # Assets
 PARQUET_MEDIA_TYPE = "application/x-parquet"
 PARQUET_ROLES = ["data", "cloud-optimized"]

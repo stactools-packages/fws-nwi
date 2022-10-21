@@ -4,11 +4,12 @@ import os
 from typing import Any, Dict, List, Optional
 
 import pyarrow as pa
-import pyproj
 import shapefile
 import shapely
 from pyarrow.parquet import ParquetWriter
+from pyproj import CRS
 from pystac import Asset
+from pystac.extensions.projection import ProjectionExtension
 from shapely.geometry import shape
 
 from . import constants, shp
@@ -21,7 +22,7 @@ IGNORE_COLS = ["DeletionFlag"]
 
 
 def convert(
-    files: List[str], content_type: Types, dest_folder: str
+    files: List[str], content_type: Types, dest_folder: str, base_crs: CRS
 ) -> Dict[str, Asset]:
     """
     Converts a shapefile reader to geoparquet files in the given folder.
@@ -38,12 +39,14 @@ def convert(
     assets: Dict[str, Asset] = {}
     for file in files:
         key = parse_name(file, content_type).replace(" ", "_").lower()
-        assets[key] = create_asset(file, content_type, dest_folder)
+        assets[key] = create_asset(file, content_type, dest_folder, base_crs)
 
     return assets
 
 
-def create_asset(src_file: str, content_type: Types, dest_folder: str) -> Asset:
+def create_asset(
+    src_file: str, content_type: Types, dest_folder: str, base_crs: CRS
+) -> Asset:
     """
     Creates an asset object for a file with table properties.
 
@@ -59,6 +62,11 @@ def create_asset(src_file: str, content_type: Types, dest_folder: str) -> Asset:
     dest_file = os.path.join(dest_folder, f"{filename}.parquet")
 
     logger.info(f"Opening {src_file} for conversion")
+
+    # Read projection
+    crs = shp.get_projection(src_file)
+
+    # Read shapefile
     with shapefile.Reader(src_file) as reader:
         # number of rows
         count = len(reader)
@@ -92,7 +100,7 @@ def create_asset(src_file: str, content_type: Types, dest_folder: str) -> Asset:
         col_range = range(len(pa_cols))
 
         # Stream chunks into geoparquet file
-        schema = pa.schema(pa_cols, metadata=encode_geoparquet_metadata())
+        schema = pa.schema(pa_cols, metadata=encode_geoparquet_metadata(crs))
 
         with ParquetWriter(
             dest_file, schema, version="2.6", compression="SNAPPY"
@@ -120,6 +128,15 @@ def create_asset(src_file: str, content_type: Types, dest_folder: str) -> Asset:
         asset_dict["table:columns"] = stac_table_cols
         asset_dict["table:row_count"] = count
         asset = Asset.from_dict(asset_dict)
+
+        # Projection info
+        if base_crs != crs:
+            proj_ext = ProjectionExtension.ext(asset)
+            epsg = crs.to_epsg()
+            if epsg is None:
+                proj_ext.projjson = crs.to_json_dict()
+            else:
+                proj_ext.epsg = epsg
 
         logger.info(f"Converted {src_file} to {dest_file}")
         return asset
@@ -182,14 +199,14 @@ def get_pyarrow_type(type: Optional[str]) -> Any:
         raise Exception(f"Unknown datatype, got {type}")
 
 
-def encode_geoparquet_metadata() -> Dict[bytes, bytes]:
-    crs = pyproj.CRS(constants.CRS).to_json_dict()
-    crs = remove_id_from_member_of_ensembles(crs)
+def encode_geoparquet_metadata(crs: CRS) -> Dict[bytes, bytes]:
+    projjson = crs.to_json_dict()
+    remove_id_from_member_of_ensembles(projjson)
 
     column_metadata = {}
     column_metadata[constants.PARQUET_GEOMETRY_COL] = {
         "encoding": "WKB",
-        "crs": crs,
+        "crs": projjson,
         "geometry_type": constants.PARQUET_GEOMETRY_TYPE,  # todo: or ["Polygon", "MultiPolygon"]?
     }
 
@@ -202,7 +219,7 @@ def encode_geoparquet_metadata() -> Dict[bytes, bytes]:
 
 
 # Source: https://github.com/geopandas/geopandas/blob/v0.11.1/geopandas/io/arrow.py#L51
-def remove_id_from_member_of_ensembles(json_dict: Dict[str, Any]) -> Dict[str, Any]:
+def remove_id_from_member_of_ensembles(json_dict: Dict[str, Any]) -> None:
     """
     Older PROJ versions will not recognize IDs of datum ensemble members that
     were added in more recent PROJ database versions.
@@ -216,4 +233,3 @@ def remove_id_from_member_of_ensembles(json_dict: Dict[str, Any]) -> Dict[str, A
         elif key == "members" and isinstance(value, list):
             for member in value:
                 member.pop("id", None)
-    return json_dict

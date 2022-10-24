@@ -135,12 +135,19 @@ def create_asset(
                         )
                     )
                     # If there's data available, write it now to avoid that the last rows get lost
-                    error_write = len(data) > 0
+                    error_write = len(data[0]) > 0
 
                 if (row_num % 2500) == 0 or row_num == count or error_write:
+                    chunk_count = len(data[0])
+
+                    # Ensure we have consistent array lengths
+                    for i in range(1, len(data)):
+                        if chunk_count != len(data[i]):
+                            raise Exception("Inconsistent length of fields")
+
                     table = pa.Table.from_arrays(data, schema=schema)
                     writer.write_table(table)
-                    real_count = real_count + len(data)
+                    real_count = real_count + chunk_count
                     data = [[] for _ in col_range]
 
         # Create asset metadata

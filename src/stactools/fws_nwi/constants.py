@@ -80,7 +80,7 @@ LINK_METADATA = Link(
 )
 
 # Extensions
-NWI_EXTENSION = "https://raw.githubusercontent.com/stactools-packages/fws-nwi/main/extension/schema.json"  # noqa: E501
+NWI_EXTENSION = "https://stac-extensions.github.io/usfws-nwi/v1.0.0/schema.json"
 PROCESSING_EXTENSION = "https://stac-extensions.github.io/processing/v1.1.0/schema.json"
 # For summaries, until supported: https://github.com/stac-utils/pystac/issues/890
 PROJECTION_EXTENSION = "https://stac-extensions.github.io/projection/v1.0.0/schema.json"

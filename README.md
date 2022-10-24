@@ -9,12 +9,12 @@
 - Dataset homepage:
   - <https://www.fws.gov/program/national-wetlands-inventory>
 - STAC extensions used:
-  - [FWS NWI](./extension/README.md)
+  - [FWS NWI](https://github.com/stac-extensions/usfws-nwi/)
   - [processing](https://github.com/stac-extensions/processing/)
   - [proj](https://github.com/stac-extensions/projection/)
   - [table](https://github.com/stac-extensions/table/) (for geoparquet only)
 - Extra fields:
-  - See the [FWS NWI Extension Specification](./extension/README.md)
+  - See the [FWS NWI Extension Specification](https://github.com/stac-extensions/usfws-nwi/) for details.
 
 stactools package for the National Wetlands Inventory (NWI) product
 provided by the U.S. Fish and Wildlife Service (FWS).

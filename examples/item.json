@@ -602,7 +602,7 @@
     43.00017
   ],
   "stac_extensions": [
-    "https://raw.githubusercontent.com/stactools-packages/fws-nwi/main/extension/schema.json",
+    "https://stac-extensions.github.io/usfws-nwi/v1.0.0/schema.json",
     "https://stac-extensions.github.io/processing/v1.1.0/schema.json",
     "https://stac-extensions.github.io/projection/v1.0.0/schema.json",
     "https://stac-extensions.github.io/table/v1.2.0/schema.json"

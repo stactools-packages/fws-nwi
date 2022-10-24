@@ -88,7 +88,7 @@ def parse_name(path: str, content_type: Types) -> str:
     name = os.path.splitext(os.path.basename(path))[0]
 
     if content_type != Types.WETLANDS:
-        return content_type.value
+        return content_type.value.replace("_", " ")
 
     # WETLANDS ONLY:
     # This is the only outlier right now, handle it specifically

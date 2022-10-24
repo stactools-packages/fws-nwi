@@ -193,10 +193,11 @@ def create_asset_metadata(content_type: Types, href: str) -> Dict[str, Any]:
         dict: Basic Asset object
     """
     title = parse_name(href, content_type)
+    role = content_type.value.lower().replace("_", "-")
     asset: Dict[str, Any] = {
         "title": f"{title} GeoParquet file",
         "type": constants.PARQUET_MEDIA_TYPE,
-        "roles": constants.PARQUET_ROLES + [content_type.value.lower()],
+        "roles": constants.PARQUET_ROLES + [role],
         "href": href,
     }
 

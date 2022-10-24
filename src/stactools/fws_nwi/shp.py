@@ -161,7 +161,7 @@ def get_lineage(path: str, content_type: Types) -> str:
                 heading = f"{name} ({details_formatted})"
 
                 src = record["DATA_SOURC"]
-                if src is not None and len(src) > 0:
+                if src is not None and len(src) > 0 and src != "None":
                     heading = heading + f" with data from *{src}*"
 
                 text = text + f"\n* {heading}"

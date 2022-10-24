@@ -133,7 +133,7 @@ def get_lineage(path: str, content_type: Types) -> str:
                 if link is not None and len(link) > 0 and link != "None":
                     name = f"[{name}]({link})"
 
-                details = [record["STATUS"], str(record["IMAGE_YR"])]
+                details = []
                 if (
                     "STATUS" in record
                     and record["STATUS"] is not None

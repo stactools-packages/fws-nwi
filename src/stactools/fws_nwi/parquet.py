@@ -1,3 +1,4 @@
+import copy
 import json
 import logging
 import os
@@ -106,7 +107,8 @@ def create_asset(
         with ParquetWriter(
             dest_file, schema, version="2.6", compression="SNAPPY"
         ) as writer:
-            data: List[List[Any]] = [[] for _ in col_range]
+            empty_data: List[List[Any]] = [[] for _ in col_range]
+            data = copy.deepcopy(empty_data)
 
             # Don't use the iterator but instead go by index and catch potential issues, primarily
             # when the metadata count is larger than the actual count of records
@@ -114,7 +116,7 @@ def create_asset(
             real_count = 0
             for i in range(count):
                 row_num = i + 1
-                error_write = False
+                force_write = False
 
                 try:
                     shape = reader.shape(i)
@@ -135,9 +137,9 @@ def create_asset(
                         )
                     )
                     # If there's data available, write it now to avoid that the last rows get lost
-                    error_write = len(data[0]) > 0
+                    force_write = len(data[0]) > 0
 
-                if (row_num % 2500) == 0 or row_num == count or error_write:
+                if (row_num % 2500) == 0 or row_num == count or force_write:
                     chunk_count = len(data[0])
 
                     # Ensure we have consistent array lengths
@@ -148,7 +150,7 @@ def create_asset(
                     table = pa.Table.from_arrays(data, schema=schema)
                     writer.write_table(table)
                     real_count = real_count + chunk_count
-                    data = [[] for _ in col_range]
+                    data = copy.deepcopy(empty_data)
 
         # Create asset metadata
         asset_dict = create_asset_metadata(content_type, dest_file)
@@ -237,7 +239,7 @@ def encode_geoparquet_metadata(crs: CRS) -> Dict[bytes, bytes]:
     column_metadata[constants.PARQUET_GEOMETRY_COL] = {
         "encoding": "WKB",
         "crs": projjson,
-        "geometry_type": constants.PARQUET_GEOMETRY_TYPE,  # todo: or ["Polygon", "MultiPolygon"]?
+        "geometry_type": constants.PARQUET_GEOMETRY_TYPE,
     }
 
     metadata = {

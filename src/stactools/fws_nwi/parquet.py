@@ -24,7 +24,11 @@ IGNORE_COLS = ["DeletionFlag"]
 
 
 def convert(
-    files: List[str], content_type: Types, dest_folder: str, base_crs: CRS
+    files: List[str],
+    content_type: Types,
+    dest_folder: str,
+    base_crs: CRS,
+    chunk_size: int,
 ) -> Dict[str, Asset]:
     """
     Converts a shapefile reader to geoparquet files in the given folder.
@@ -41,13 +45,15 @@ def convert(
     assets: Dict[str, Asset] = {}
     for file in files:
         key = "geoparquet_" + parse_name(file, content_type).replace(" ", "_").lower()
-        assets[key] = create_asset(file, content_type, dest_folder, base_crs)
+        assets[key] = create_asset(
+            file, content_type, dest_folder, base_crs, chunk_size
+        )
 
     return assets
 
 
 def create_asset(
-    src_file: str, content_type: Types, dest_folder: str, base_crs: CRS
+    src_file: str, content_type: Types, dest_folder: str, base_crs: CRS, chunk_size: int
 ) -> Asset:
     """
     Creates an asset object for a file with table properties.
@@ -139,7 +145,7 @@ def create_asset(
                     # If there's data available, write it now to avoid that the last rows get lost
                     force_write = len(data[0]) > 0
 
-                if (row_num % 2500) == 0 or row_num == count or force_write:
+                if (row_num % chunk_size) == 0 or row_num == count or force_write:
                     chunk_count = len(data[0])
 
                     # Ensure we have consistent array lengths

@@ -127,6 +127,7 @@ def create_item(
     nogeoparquet: bool = False,
     noshp: bool = False,
     item_datetime_str: str = "",
+    chunk_size: int = 5000,
 ) -> Item:
     """Create a STAC Item
 
@@ -142,6 +143,8 @@ def create_item(
         noshp (bool): If set to True, the shapefile is not added to the Item
         item_datetime_str (str): The datetime for the Item, defaults to now.
             Datetimes consist of a date and time in UTC and must be follow RFC 3339, section 5.6.
+        chunk_size (int): The number of rows to read from the shapefile and to write to the
+            geoparquet file per chunk. Only applies if nogeoparquet is False.
 
     Returns:
         Item: STAC Item object
@@ -254,7 +257,9 @@ def create_item(
             # https://github.com/stac-utils/pystac/issues/793
             TableExtension.ext(item, add_if_missing=True)
             for t in Types:
-                assets = parquet.convert(content[t].files, t, target_folder, geom_crs)
+                assets = parquet.convert(
+                    content[t].files, t, target_folder, geom_crs, chunk_size
+                )
                 for key in assets:
                     item.add_asset(key, assets[key])
 

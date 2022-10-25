@@ -55,7 +55,7 @@ KEYWORDS = [
 ]
 
 LINK_LICENSE = Link(
-    target="#",  # todo
+    target="http://www.usa.gov/publicdomain/label/1.0/",
     media_type="text/html",
     title="US Public Domain",
     rel="license",

@@ -1,5 +1,6 @@
 import json
 import os.path
+import shutil
 from tempfile import TemporaryDirectory
 from typing import Callable, List
 
@@ -53,13 +54,15 @@ class CommandsTest(CliTestCase):
     def test_create_item(self) -> None:
         with TemporaryDirectory() as tmp_dir:
             id = "DC_shapefile_wetlands"
-            src_collection = os.path.join(context.SOURCE_FOLDER, "collection.json")
-            truth_file = os.path.join(context.SOURCE_FOLDER, f"{id}.json")
-            dest_file = os.path.join(tmp_dir, "item.json")
             date = "2020-01-01T00:00:00Z"
+            src_collection = os.path.join(context.SOURCE_FOLDER, "collection.json")
+            truth_stac_file = os.path.join(context.SOURCE_FOLDER, f"{id}.json")
+            dest_stac_file = os.path.join(tmp_dir, "item.json")
+            src_data_file = os.path.join(tmp_dir, os.path.basename(context.DC_FILE))
+            shutil.copyfile(context.DC_FILE, src_data_file)
 
             cmd = (
-                f"fws-nwi create-item {context.DC_FILE} {dest_file}"
+                f"fws-nwi create-item {src_data_file} {dest_stac_file}"
                 f" --collection {src_collection}"
                 f" --datetime {date}"
             )
@@ -73,9 +76,9 @@ class CommandsTest(CliTestCase):
 
             item = {}
             truth_item = {}
-            with open(dest_file) as f:
+            with open(dest_stac_file) as f:
                 item = json.load(f)
-            with open(truth_file) as f:
+            with open(truth_stac_file) as f:
                 truth_item = json.load(f)
 
             self.assertEqual(item["id"], id)
@@ -84,7 +87,9 @@ class CommandsTest(CliTestCase):
                 item,
                 truth_item,
                 ignore_order=True,
-                exclude_regex_paths=r"root\['(assets|links)'\]\[[\w']+\]\['href'\]",
+                # Ignore href in links and assets as paths will depend on OS
+                # Ignore bboxes and geometries due to floarint point number inconsistencies
+                exclude_regex_paths=r"(root\['properties'\]\['proj:(bbox|geometry)'\]|root\['(bbox|geometry)'\]|root\['(assets|links)'\]\[[\w']+\]\['href'\])",  # noqa: E501
             )
             if len(diff) > 0:
                 print(diff)

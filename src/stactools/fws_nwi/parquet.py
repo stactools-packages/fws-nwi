@@ -7,11 +7,11 @@ from typing import Any, Dict, List, Optional
 
 import pyarrow as pa
 import shapefile
-import shapely
 from pyarrow.parquet import ParquetWriter
 from pyproj import CRS
 from pystac import Asset
 from pystac.extensions.projection import ProjectionExtension
+from shapely import wkb
 from shapely.geometry import shape as to_geom
 
 from . import constants, shp
@@ -127,7 +127,7 @@ def create_asset(
                 try:
                     shape = reader.shape(i)
                     geometry = to_geom(shape.__geo_interface__)
-                    data[0].append(shapely.wkb.dumps(geometry))
+                    data[0].append(wkb.dumps(geometry))
 
                     record = reader.record(i)
                     for j in range(len(record)):

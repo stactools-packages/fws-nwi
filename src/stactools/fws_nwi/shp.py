@@ -69,7 +69,7 @@ def get_projection(shp_path: str) -> CRS:
         with open(proj_file, "r") as file:
             return CRS.from_string(file.read())
     else:
-        logger.warn(
+        logger.warning(
             f"No projection file found at {proj_file}, falling back to EPSG:5070"
         )
         return CRS.from_epsg(5070)

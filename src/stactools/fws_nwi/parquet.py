@@ -133,7 +133,7 @@ def create_asset(
                     for j in range(len(record)):
                         data[j + 1].append(record[j])
                 except struct.error as err:
-                    logger.warn(
+                    logger.warning(
                         (
                             "The count of records/shapes in the metadata is likely higher than the"
                             " actual number of records/shapes. Handling this gracefully, but the"

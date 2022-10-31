@@ -93,3 +93,18 @@ To run the tests:
 ```shell
 pytest -vv
 ```
+
+### Tests
+
+
+
+Due to the large file sizes, only the data files for the state of DC has been added to the repository so that 
+we can ensure the basic functionality of the item creation is working.
+To run the full suite of tests, please download more shapefiles from the
+[U.S. Fish & Wildlife Service](https://www.fws.gov/node/264847), e.g. for South Dakota.
+After download, please **don't** extract the zip files. Instead, please the ZIP files files in 
+the `tests/data-files/external` folder.
+
+Thus, the CI doesn't runs the tests for item generation on DC only due to the lack of more data files in the repository.
+Please ensure you've tested the changes against more data files locally!
+

@@ -1,11 +1,16 @@
 import logging
-from typing import Optional
+import os
+import pathlib
+from typing import List, Optional
 
 import click
-from click import Command, Group
+import requests
+from click import Command, Group, Path
 from pystac import Collection
+from tqdm import tqdm
 
 from stactools.fws_nwi import stac
+from stactools.fws_nwi.states import States
 
 logger = logging.getLogger(__name__)
 
@@ -132,5 +137,30 @@ def create_fwsnwi_command(cli: Group) -> Command:
         item.save_object(dest_href=destination)
 
         return None
+
+    @fwsnwi.command("download", short_help="Download zipped shapefiles")
+    @click.argument("codes", nargs=-1)
+    @click.argument("destination", nargs=1)
+    def download(codes: List[str], destination: Path) -> None:
+        """Downloads some FWI zip files to the destination directory.
+
+        If no codes are provided, downloads them all. This will take a while.
+        """
+        if not codes:
+            codes = States.codes()
+        os.makedirs(str(destination), exist_ok=True)
+        for code in codes:
+            url = f"https://www.fws.gov/wetlands/Data/State-Downloads/{code}_shapefile_wetlands.zip"
+            path = pathlib.Path(str(destination)) / os.path.basename(url)
+            response = requests.get(url, stream=True)
+            with tqdm.wrapattr(
+                open(path, "wb"),
+                "write",
+                miniters=1,
+                desc=url.split("/")[-1],
+                total=int(response.headers.get("content-length", 0)),
+            ) as fout:
+                for chunk in response.iter_content(chunk_size=4096):
+                    fout.write(chunk)
 
     return fwsnwi

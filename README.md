@@ -5,12 +5,11 @@
 - Name: fws-nwi
 - Package: `stactools.fws_nwi`
 - [stactools-fws-nwi on PyPI](https://pypi.org/project/stactools-fws-nwi/)
-- Owner: @m-mohr
+- Owners: @m-mohr, @gadomski
 - Dataset homepage:
   - <https://www.fws.gov/program/national-wetlands-inventory>
 - STAC extensions used:
   - [FWS NWI](https://github.com/stac-extensions/usfws-nwi/)
-  - [processing](https://github.com/stac-extensions/processing/)
   - [proj](https://github.com/stac-extensions/projection/)
   - [table](https://github.com/stac-extensions/table/) (for geoparquet only)
 - Extra fields:
@@ -21,10 +20,10 @@ provided by the U.S. Fish and Wildlife Service (FWS).
 
 The Wetlands Data Layer is the product of over 45 years of work by the National
 Wetlands Inventory (NWI) and its collaborators and currently contains more than
-35 million wetland and deepwater features. This dataset, covering the conterminous 
-United States, Hawaii, Puerto Rico, the Virgin Islands, Guam, the major Northern 
-Mariana Islands and Alaska, continues to grow at a rate of 50 to 100 million acres 
-annually as data are updated. The data layer is updated twice a year and these 
+35 million wetland and deepwater features. This dataset, covering the conterminous
+United States, Hawaii, Puerto Rico, the Virgin Islands, Guam, the major Northern
+Mariana Islands and Alaska, continues to grow at a rate of 50 to 100 million acres
+annually as data are updated. The data layer is updated twice a year and these
 changes are reflected on the mapper and in the data downloads.
 
 ## STAC Examples
@@ -62,7 +61,7 @@ stac fws-nwi create-collection --help
 Create an item:
 
 ```shell
-stac fws-nwi create-item /path/to/source/file.zip item.json --collection collection.json
+stac fws-nwi create-item /path/to/source/file.zip item.json
 ```
 
 Get information about all options for item creation:
@@ -93,18 +92,3 @@ To run the tests:
 ```shell
 pytest -vv
 ```
-
-### Tests
-
-
-
-Due to the large file sizes, only the data files for the state of DC has been added to the repository so that 
-we can ensure the basic functionality of the item creation is working.
-To run the full suite of tests, please download more shapefiles from the
-[U.S. Fish & Wildlife Service](https://www.fws.gov/node/264847), e.g. for South Dakota.
-After download, please **don't** extract the zip files. Instead, please the ZIP files files in 
-the `tests/data-files/external` folder.
-
-Thus, the CI doesn't runs the tests for item generation on DC only due to the lack of more data files in the repository.
-Please ensure you've tested the changes against more data files locally!
-

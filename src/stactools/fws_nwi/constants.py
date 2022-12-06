@@ -1,3 +1,6 @@
+import datetime
+
+from dateutil.tz import tzutc
 from pystac import Link, Provider, ProviderRole
 
 # Collection
@@ -85,16 +88,5 @@ PROCESSING_EXTENSION = "https://stac-extensions.github.io/processing/v1.1.0/sche
 # For summaries, until supported: https://github.com/stac-utils/pystac/issues/890
 PROJECTION_EXTENSION = "https://stac-extensions.github.io/projection/v1.0.0/schema.json"
 
-# Assets
-PARQUET_MEDIA_TYPE = "application/x-parquet"
-PARQUET_ROLES = ["data", "cloud-optimized"]
-PARQUET_GEOMETRY_COL = "geometry"
-PARQUET_GEOMETRY_TYPE = "Polygon"
-
-SHP_TITLE = "Source assets in a ZIP file"
-SHP_DESCRIPTION = (
-    "The ZIP archive contains the original data files in ESRI Shapefile format."
-)
-SHP_MEDIA_TYPE = "application/zip"
-SHP_ROLES = ["data", "archive", "source"]
-SHP_KEY = "source"
+DATETIME = datetime.datetime(2022, 10, 1, tzinfo=tzutc())
+ZIPFILE_ASSET_KEY = "zip"

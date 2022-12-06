@@ -6,7 +6,6 @@ from typing import List, Optional
 import click
 import requests
 from click import Command, Group, Path
-from pystac import Collection
 from tqdm import tqdm
 
 from stactools.fws_nwi import stac
@@ -69,54 +68,35 @@ def create_fwsnwi_command(cli: Group) -> Command:
         Args:
             destination (str): An HREF for the Collection JSON
         """
-        collection = stac.create_collection(
-            id, thumbnail, nogeoparquet, noshp, start_time
-        )
-        collection.set_self_href(destination)
-
-        collection.save_object()
-
-        return None
+        raise NotImplementedError
 
     @fwsnwi.command("create-item", short_help="Create a STAC item")
     @click.argument("source")
     @click.argument("destination")
     @click.option(
-        "--collection",
-        default="",
-        help="An HREF to the Collection JSON. "
-        "This adds the collection details to the item, but doesn't add the item to the collection.",
-    )
-    @click.option(
-        "--nogeoparquet",
+        "--create-geoparquet/--no-create-geoparquet",
         default=False,
-        help="Does not create geoparquet files for the given shapefile if set to `TRUE`.",
+        help="Create geoparquet assets alongside the item",
+        show_default=True,
     )
     @click.option(
-        "--noshp",
+        "--make-asset-hrefs-relative/--no-make-asset-hrefs-relative",
         default=False,
-        help="Does not include the shapefile in the created metadata if set to `TRUE`.",
+        help="Make asset hrefs relative",
+        show_default=True,
     )
     @click.option(
-        "--datetime",
-        default="",
-        help="The datetime for the Item, defaults to now. "
-        "Datetimes consist of a date and time in UTC and must be follow RFC 3339, section 5.6.",
-    )
-    @click.option(
-        "--chunk_size",
-        default=5000,
-        help="The number of rows to read from the shapefile and to write to the geoparquet file "
-        "per chunk. Only applies if --nogeoparquet is False. Defaults to 5000.",
+        "--include-self-link/--no-include-self-link",
+        default=False,
+        help="Include a self link",
+        show_default=True,
     )
     def create_item_command(
-        source: str,
-        destination: str,
-        collection: str = "",
-        nogeoparquet: bool = False,
-        noshp: bool = False,
-        datetime: str = "",
-        chunk_size: int = 5000,
+        source: Path,
+        destination: Path,
+        create_geoparquet: bool,
+        make_asset_hrefs_relative: bool,
+        include_self_link: bool,
     ) -> None:
         """Creates a STAC Item
 
@@ -124,18 +104,19 @@ def create_fwsnwi_command(cli: Group) -> Command:
             source (str): HREF of the Asset associated with the Item
             destination (str): An HREF for the STAC Item
         """
-        if chunk_size < 1:
-            raise Exception("Chunk size must be > 0")
-
-        stac_collection = None
-        if len(collection) > 0:
-            stac_collection = Collection.from_file(collection)
-
+        destination_path = pathlib.Path(str(destination))
+        if create_geoparquet:
+            geoparquet_directory = destination_path.parent
+        else:
+            geoparquet_directory = None
         item = stac.create_item(
-            source, stac_collection, nogeoparquet, noshp, datetime, chunk_size
+            pathlib.Path(str(source)), geoparquet_directory=geoparquet_directory
         )
-        item.save_object(dest_href=destination)
-
+        item.set_self_href(str(destination_path.absolute()))
+        item.make_asset_hrefs_absolute()
+        if make_asset_hrefs_relative:
+            item.make_asset_hrefs_relative()
+        item.save_object(include_self_link=include_self_link)
         return None
 
     @fwsnwi.command("download", short_help="Download zipped shapefiles")

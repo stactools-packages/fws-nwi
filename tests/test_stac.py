@@ -6,6 +6,12 @@ from pystac.extensions.table import TableExtension
 from stactools.fws_nwi import stac
 
 
+def test_create_collection() -> None:
+    collection = stac.create_collection()
+    collection.set_self_href("dummy value")
+    collection.validate()
+
+
 def test_create_item(dc_zipfile: Path) -> None:
     item = stac.create_item(dc_zipfile)
     assert item.id == "DC"

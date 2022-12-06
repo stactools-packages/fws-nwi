@@ -2,13 +2,54 @@ from pathlib import Path
 from typing import Dict, Optional
 
 import shapely.geometry
-from pystac import Asset, Item, Link, MediaType
+from pystac import (
+    Asset,
+    Collection,
+    Extent,
+    Item,
+    Link,
+    MediaType,
+    SpatialExtent,
+    TemporalExtent,
+)
 from pystac.extensions.projection import ProjectionExtension
 from pystac.extensions.table import TableExtension
 
 from stactools.fws_nwi import geoparquet
-from stactools.fws_nwi.constants import DATETIME, NWI_EXTENSION, ZIPFILE_ASSET_KEY
+from stactools.fws_nwi.constants import (
+    COLLECTION_BBOXES,
+    DATETIME,
+    DESCRIPTION,
+    KEYWORDS,
+    LINK_FACT_SHEET,
+    LINK_LANDING_PAGE,
+    LINK_LICENSE,
+    LINK_METADATA,
+    NWI_EXTENSION,
+    PROVIDER_USFWS,
+    TITLE,
+    ZIPFILE_ASSET_KEY,
+)
 from stactools.fws_nwi.metadata import Metadata
+
+
+def create_collection() -> Collection:
+    collection = Collection(
+        id="fws-nwi",
+        description=DESCRIPTION,
+        title=TITLE,
+        keywords=KEYWORDS,
+        license="proprietary",
+        providers=[PROVIDER_USFWS],
+        extent=Extent(
+            spatial=SpatialExtent(COLLECTION_BBOXES),
+            temporal=TemporalExtent([[DATETIME, DATETIME]]),
+        ),
+    )
+    collection.add_links(
+        [LINK_METADATA, LINK_FACT_SHEET, LINK_LANDING_PAGE, LINK_LICENSE]
+    )
+    return collection
 
 
 def create_item(

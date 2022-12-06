@@ -11,16 +11,16 @@
       "title": "FWS National Wetlands Inventory"
     },
     {
-      "rel": "item",
-      "href": "./item.json",
-      "type": "application/geo+json",
-      "title": "Massachusetts Wetlands"
+      "rel": "describedby",
+      "href": "https://www.fws.gov/wetlands/Data/metadata/FWS_Wetlands.xml",
+      "type": "application/xml",
+      "title": "Wetlands metadata"
     },
     {
-      "rel": "license",
-      "href": "http://www.usa.gov/publicdomain/label/1.0/",
-      "type": "text/html",
-      "title": "U.S. Public Domain"
+      "rel": "about",
+      "href": "https://www.fws.gov/sites/default/files/documents/national-wetlands-inventory-fact-sheet.pdf",
+      "type": "application/pdf",
+      "title": "Project Fact Sheet"
     },
     {
       "rel": "about",
@@ -29,22 +29,18 @@
       "title": "Project Landing Page"
     },
     {
-      "rel": "describedby",
-      "href": "https://www.fws.gov/wetlands/Data/metadata/FWS_Wetlands.xml",
-      "type": "application/xml",
-      "title": "Wetlands metadata"
+      "rel": "license",
+      "href": "http://www.usa.gov/publicdomain/label/1.0/",
+      "type": "text/html",
+      "title": "US Public Domain"
     },
     {
-      "rel": "self",
-      "href": "https://raw.githubusercontent.com/stactools-packages/fws-nwi/main/examples/collection.json",
+      "rel": "item",
+      "href": "./DC/DC.json",
       "type": "application/json"
     }
   ],
-  "stac_extensions": [
-    "https://stac-extensions.github.io/usfws-nwi/v1.0.0/schema.json",
-    "https://stac-extensions.github.io/projection/v1.0.0/schema.json",
-    "https://stac-extensions.github.io/table/v1.2.0/schema.json"
-  ],
+  "stac_extensions": [],
   "title": "FWS National Wetlands Inventory",
   "extent": {
     "spatial": {
@@ -72,8 +68,8 @@
     "temporal": {
       "interval": [
         [
-          "2022-10-06T00:00:00Z",
-          null
+          "2022-10-01T00:00:00Z",
+          "2022-10-01T00:00:00Z"
         ]
       ]
     }
@@ -93,10 +89,7 @@
     "marshes",
     "bogs",
     "fens",
-    "coastal waters",
-    "Shapefile",
-    "SHP",
-    "GeoParquet"
+    "coastal waters"
   ],
   "providers": [
     {
@@ -109,122 +102,5 @@
       "url": "https://www.fws.gov",
       "email": "wetlands_team@fws.gov"
     }
-  ],
-  "summaries": {
-    "fws_nwi:state": [
-      "Alabama",
-      "Alaska",
-      "Arizona",
-      "Arkansas",
-      "California",
-      "Colorado",
-      "Connecticut",
-      "Delaware",
-      "District of Columbia",
-      "Florida",
-      "Georgia",
-      "Hawaii",
-      "Idaho",
-      "Illinois",
-      "Indiana",
-      "Iowa",
-      "Kansas",
-      "Kentucky",
-      "Louisiana",
-      "Maine",
-      "Maryland",
-      "Massachusetts",
-      "Michigan",
-      "Minnesota",
-      "Mississippi",
-      "Missouri",
-      "Montana",
-      "Nebraska",
-      "Nevada",
-      "New Hampshire",
-      "New Jersey",
-      "New Mexico",
-      "New York",
-      "North Carolina",
-      "North Dakota",
-      "Ohio",
-      "Oklahoma",
-      "Oregon",
-      "Pacific Trust Islands",
-      "Pennsylvania",
-      "Puerto Rico and Virgin Islands",
-      "Rhode Island",
-      "South Carolina",
-      "South Dakota",
-      "Tennessee",
-      "Texas",
-      "Utah",
-      "Vermont",
-      "Virginia",
-      "Washington",
-      "West Virginia",
-      "Wisconsin",
-      "Wyoming"
-    ],
-    "fws_nwi:state_code": [
-      "AL",
-      "AK",
-      "AZ",
-      "AR",
-      "CA",
-      "CO",
-      "CT",
-      "DE",
-      "DC",
-      "FL",
-      "GA",
-      "HI",
-      "ID",
-      "IL",
-      "IN",
-      "IA",
-      "KS",
-      "KY",
-      "LA",
-      "ME",
-      "MD",
-      "MA",
-      "MI",
-      "MN",
-      "MS",
-      "MO",
-      "MT",
-      "NE",
-      "NV",
-      "NH",
-      "NJ",
-      "NM",
-      "NY",
-      "NC",
-      "ND",
-      "OH",
-      "OK",
-      "OR",
-      "PacTrust",
-      "PA",
-      "PRVI",
-      "RI",
-      "SC",
-      "SD",
-      "TN",
-      "TX",
-      "UT",
-      "VT",
-      "VA",
-      "WA",
-      "WV",
-      "WI",
-      "WY"
-    ],
-    "fws_nwi:content": [
-      "historic_wetlands",
-      "riparian",
-      "wetlands"
-    ]
-  }
+  ]
 }

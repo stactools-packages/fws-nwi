@@ -1,0 +1,311 @@
+{
+  "type": "Feature",
+  "stac_version": "1.0.0",
+  "id": "DC",
+  "properties": {
+    "fws_nwi:state": "District of Columbia",
+    "fws_nwi:state_code": "DC",
+    "fws_nwi:content": [
+      "wetlands"
+    ],
+    "proj:epsg": 5070,
+    "proj:bbox": [
+      1608906.44,
+      1907758.9,
+      1635531.23,
+      1939488.86
+    ],
+    "datetime": "2022-10-01T00:00:00Z"
+  },
+  "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+      [
+        [
+          -77.112711,
+          38.750119
+        ],
+        [
+          -77.124702,
+          38.750114
+        ],
+        [
+          -77.124701,
+          39.00011
+        ],
+        [
+          -76.874695,
+          39.00011
+        ],
+        [
+          -76.874694,
+          38.750115
+        ],
+        [
+          -77.112711,
+          38.750119
+        ]
+      ]
+    ]
+  },
+  "links": [
+    {
+      "rel": "archives",
+      "href": "http://www.fws.gov/wetlands/Data/HisMapRep/richmond-a.pdf",
+      "type": "application/pdf",
+      "title": "richmond-a"
+    },
+    {
+      "rel": "archives",
+      "href": "http://www.fws.gov/wetlands/Data/HisMapRep/salisbury-a.pdf",
+      "type": "application/pdf",
+      "title": "salisbury-a"
+    },
+    {
+      "rel": "archives",
+      "href": "http://www.fws.gov/wetlands/Data/HisMapRep/MD_DEStatusTrends.pdf",
+      "type": "application/pdf",
+      "title": "MD_DEStatusTrends"
+    },
+    {
+      "rel": "archives",
+      "href": "http://www.fws.gov/wetlands/Data/HisMapRep/MDFieldReportBaltimre.pdf",
+      "type": "application/pdf",
+      "title": "MDFieldReportBaltimre"
+    },
+    {
+      "rel": "archives",
+      "href": "http://www.fws.gov/wetlands/Data/HisMapRep/MDFieldReportBaltimre2.pdf",
+      "type": "application/pdf",
+      "title": "MDFieldReportBaltimre2"
+    },
+    {
+      "rel": "root",
+      "href": "../collection.json",
+      "type": "application/json",
+      "title": "FWS National Wetlands Inventory"
+    },
+    {
+      "rel": "collection",
+      "href": "../collection.json",
+      "type": "application/json",
+      "title": "FWS National Wetlands Inventory"
+    },
+    {
+      "rel": "parent",
+      "href": "../collection.json",
+      "type": "application/json",
+      "title": "FWS National Wetlands Inventory"
+    }
+  ],
+  "assets": {
+    "zip": {
+      "href": "./DC_shapefile_wetlands.zip",
+      "type": "application/zip",
+      "title": "DC_shapefile_wetlands",
+      "description": "DC_shapefile_wetlands source zipfile",
+      "roles": [
+        "data",
+        "archive",
+        "source"
+      ]
+    },
+    "DC_Wetlands": {
+      "href": "./DC_Wetlands.geoparquet",
+      "type": "application/x-parquet",
+      "title": "DC Wetlands",
+      "description": "DC Wetlands geoparquet",
+      "table:primary_geometry": "geometry",
+      "table:columns": [
+        {
+          "name": "ATTRIBUTE",
+          "type": "byte_array"
+        },
+        {
+          "name": "WETLAND_TY",
+          "type": "byte_array"
+        },
+        {
+          "name": "ACRES",
+          "type": "double"
+        },
+        {
+          "name": "Shape_Leng",
+          "type": "double"
+        },
+        {
+          "name": "Shape_Area",
+          "type": "double"
+        },
+        {
+          "name": "geometry",
+          "type": "byte_array"
+        }
+      ],
+      "table:row_count": 1556,
+      "roles": [
+        "data",
+        "cloud-optimized",
+        "wetlands"
+      ]
+    },
+    "DC_Wetlands_Historic_Map_Info": {
+      "href": "./DC_Wetlands_Historic_Map_Info.geoparquet",
+      "type": "application/x-parquet",
+      "title": "DC Wetlands Historic Map Info",
+      "description": "DC Wetlands Historic Map Info geoparquet",
+      "table:primary_geometry": "geometry",
+      "table:columns": [
+        {
+          "name": "PDF_NAME",
+          "type": "byte_array"
+        },
+        {
+          "name": "PDF_HYPERL",
+          "type": "byte_array"
+        },
+        {
+          "name": "SHAPE_Leng",
+          "type": "double"
+        },
+        {
+          "name": "SHAPE_Area",
+          "type": "double"
+        },
+        {
+          "name": "geometry",
+          "type": "byte_array"
+        }
+      ],
+      "table:row_count": 5,
+      "roles": [
+        "data",
+        "cloud-optimized"
+      ]
+    },
+    "DC_Wetlands_Project_Metadata": {
+      "href": "./DC_Wetlands_Project_Metadata.geoparquet",
+      "type": "application/x-parquet",
+      "title": "DC Wetlands Project Metadata",
+      "description": "DC Wetlands Project Metadata geoparquet",
+      "table:primary_geometry": "geometry",
+      "table:columns": [
+        {
+          "name": "PROJECT_NA",
+          "type": "byte_array"
+        },
+        {
+          "name": "STATUS",
+          "type": "byte_array"
+        },
+        {
+          "name": "SUPPMAPINF",
+          "type": "byte_array"
+        },
+        {
+          "name": "FGDC_METAD",
+          "type": "byte_array"
+        },
+        {
+          "name": "DATA_SOURC",
+          "type": "byte_array"
+        },
+        {
+          "name": "IMAGE_YR",
+          "type": "int64"
+        },
+        {
+          "name": "IMAGE_DATE",
+          "type": "byte_array"
+        },
+        {
+          "name": "IMAGE_SCAL",
+          "type": "int64"
+        },
+        {
+          "name": "ALL_SCALES",
+          "type": "byte_array"
+        },
+        {
+          "name": "EMULSION",
+          "type": "byte_array"
+        },
+        {
+          "name": "COMMENTS",
+          "type": "byte_array"
+        },
+        {
+          "name": "SOURCE_TYP",
+          "type": "byte_array"
+        },
+        {
+          "name": "SHAPE_Leng",
+          "type": "double"
+        },
+        {
+          "name": "SHAPE_Area",
+          "type": "double"
+        },
+        {
+          "name": "geometry",
+          "type": "byte_array"
+        }
+      ],
+      "table:row_count": 7,
+      "roles": [
+        "data",
+        "cloud-optimized"
+      ]
+    },
+    "District_of_Columbia": {
+      "href": "./District_of_Columbia.geoparquet",
+      "type": "application/x-parquet",
+      "title": "District of Columbia",
+      "description": "District of Columbia geoparquet",
+      "table:primary_geometry": "geometry",
+      "table:columns": [
+        {
+          "name": "ST_NAME1",
+          "type": "byte_array"
+        },
+        {
+          "name": "ST_ABBV",
+          "type": "byte_array"
+        },
+        {
+          "name": "AreaAcres",
+          "type": "double"
+        },
+        {
+          "name": "Shape_Leng",
+          "type": "double"
+        },
+        {
+          "name": "Shape_Area",
+          "type": "double"
+        },
+        {
+          "name": "geometry",
+          "type": "byte_array"
+        }
+      ],
+      "table:row_count": 1,
+      "roles": [
+        "data",
+        "cloud-optimized"
+      ]
+    }
+  },
+  "bbox": [
+    -77.124702,
+    38.750114,
+    -76.874694,
+    39.00011
+  ],
+  "stac_extensions": [
+    "https://stac-extensions.github.io/usfws-nwi/v1.0.0/schema.json",
+    "https://stac-extensions.github.io/projection/v1.0.0/schema.json",
+    "https://stac-extensions.github.io/table/v1.2.0/schema.json"
+  ],
+  "collection": "fws-nwi"
+}

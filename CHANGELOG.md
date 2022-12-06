@@ -11,7 +11,7 @@ number as needed.
 
 ### Added
 
-- Nothing.
+- Geoparquet creation with GeoPandas ([#13](https://github.com/stactools-packages/fws-nwi/pull/13))
 
 ### Deprecated
 
@@ -19,7 +19,7 @@ number as needed.
 
 ### Removed
 
-- Nothing.
+- Custom shapefile -> geoparquet conversion ([#13](https://github.com/stactools-packages/fws-nwi/pull/13))
 
 ### Fixed
 

@@ -6,5 +6,5 @@ mypy
 pre-commit
 pytest
 pytest-cov
-deepdiff
+types-python-dateutil
 types-requests

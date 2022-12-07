@@ -3,31 +3,24 @@ import os.path
 from tempfile import TemporaryDirectory
 from typing import Callable, List
 
-import pytest
 from click import Command, Group
-from deepdiff import DeepDiff
 from pystac import Item
 from stactools.testing.cli_test import CliTestCase
 
 from stactools.fws_nwi.commands import create_fwsnwi_command
 
-from . import context, test_data
+from . import test_data
 
 
 class CommandsTest(CliTestCase):
     def create_subcommand_functions(self) -> List[Callable[[Group], Command]]:
         return [create_fwsnwi_command]
 
-    @pytest.mark.skip
     def test_create_collection(self) -> None:
         with TemporaryDirectory() as tmp_dir:
-            truth_file = os.path.join(context.SOURCE_FOLDER, "collection.json")
             dest_file = os.path.join(tmp_dir, "collection.json")
 
-            result = self.run_command(
-                f"fws-nwi create-collection {dest_file}"
-                f" --start_time 2022-01-01T00:00:00Z"
-            )
+            result = self.run_command(f"fws-nwi create-collection {dest_file}")
 
             self.assertEqual(result.exit_code, 0, msg="\n{}".format(result.output))
 
@@ -35,23 +28,10 @@ class CommandsTest(CliTestCase):
             self.assertEqual(len(jsons), 1)
 
             collection = {}
-            truth_collection = {}
             with open(dest_file) as f:
                 collection = json.load(f)
-            with open(truth_file) as f:
-                truth_collection = json.load(f)
 
             self.assertEqual(collection["id"], "fws-nwi")
-
-            diff = DeepDiff(
-                collection,
-                truth_collection,
-                ignore_order=True,
-                exclude_regex_paths=r"root\['links'\]\[\d+\]\['href'\]",
-            )
-            if len(diff) > 0:
-                print(diff)
-            self.assertEqual(diff, {})
 
     def test_create_item(self) -> None:
         path = test_data.get_path("data-files/DC_shapefile_wetlands.zip")

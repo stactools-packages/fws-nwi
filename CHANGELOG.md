@@ -12,6 +12,7 @@ number as needed.
 ### Added
 
 - Geoparquet creation with GeoPandas ([#13](https://github.com/stactools-packages/fws-nwi/pull/13))
+- Item assets extension ([#14](https://github.com/stactools-packages/fws-nwi/pull/14))
 
 ### Deprecated
 

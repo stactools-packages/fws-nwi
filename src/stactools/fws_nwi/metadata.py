@@ -85,9 +85,9 @@ class Metadata:
 def role(name: str) -> Optional[str]:
     name = name.split("/")[-1].split(".")[0]
     parts = name.split("_")
-    if len(parts) == 0:
+    if len(parts) <= 1:
         return None
-    elif len(parts) >= 2 and parts[1] == "Historic" and parts[2] == "Wetlands":
+    elif len(parts) >= 3 and parts[1] == "Historic" and parts[2] == "Wetlands":
         return "historic_wetlands"
     elif parts[1] == "Wetlands":
         if name.endswith("Historic_Map_Info") or name.endswith("Project_Metadata"):

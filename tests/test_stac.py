@@ -1,5 +1,6 @@
 from pathlib import Path
 
+from pystac.extensions.item_assets import ItemAssetsExtension
 from pystac.extensions.projection import ProjectionExtension
 from pystac.extensions.table import TableExtension
 
@@ -8,6 +9,10 @@ from stactools.fws_nwi import stac
 
 def test_create_collection() -> None:
     collection = stac.create_collection()
+
+    item_assets = ItemAssetsExtension.ext(collection)
+    assert "zip" in item_assets.item_assets
+
     collection.set_self_href("dummy value")
     collection.validate()
 

@@ -12,6 +12,7 @@ from pystac import (
     SpatialExtent,
     TemporalExtent,
 )
+from pystac.extensions.item_assets import AssetDefinition, ItemAssetsExtension
 from pystac.extensions.projection import ProjectionExtension
 from pystac.extensions.table import TableExtension
 
@@ -49,6 +50,17 @@ def create_collection() -> Collection:
     collection.add_links(
         [LINK_METADATA, LINK_FACT_SHEET, LINK_LANDING_PAGE, LINK_LICENSE]
     )
+
+    item_assets = ItemAssetsExtension.ext(collection, add_if_missing=True)
+    item_assets.item_assets = {
+        "zip": AssetDefinition.create(
+            title=None,
+            description=None,
+            media_type="application/zip",
+            roles=["data", "archive", "source"],
+        )
+    }
+
     return collection
 
 

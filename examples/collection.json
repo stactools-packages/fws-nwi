@@ -40,7 +40,19 @@
       "type": "application/json"
     }
   ],
-  "stac_extensions": [],
+  "stac_extensions": [
+    "https://stac-extensions.github.io/item-assets/v1.0.0/schema.json"
+  ],
+  "item_assets": {
+    "zip": {
+      "type": "application/zip",
+      "roles": [
+        "data",
+        "archive",
+        "source"
+      ]
+    }
+  },
   "title": "FWS National Wetlands Inventory",
   "extent": {
     "spatial": {

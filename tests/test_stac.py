@@ -51,3 +51,8 @@ def test_create_item_with_geoparquet(dc_zipfile: Path, tmp_path: Path) -> None:
     assert len(geoparquet_assets) == 4
     for asset in geoparquet_assets:
         _ = TableExtension.ext(asset)
+
+
+def test_create_item_with_fallback_geometry(hi_zipfile: Path) -> None:
+    item = stac.create_item(hi_zipfile)
+    item.validate()

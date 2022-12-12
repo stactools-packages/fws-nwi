@@ -109,11 +109,9 @@ def create_item_from_assets(assets: Dict[str, Asset]) -> Item:
     item.assets = assets
 
     projection = ProjectionExtension.ext(item, add_if_missing=True)
-    epsg = metadata.crs.to_epsg()
-    if epsg is None:
+    projection.epsg = metadata.crs.to_epsg()
+    if projection.epsg is None:
         projection.wkt2 = metadata.crs.to_wkt(WktVersion.WKT2_2019)
-    else:
-        projection.epsg = epsg
 
     if any(
         any(k.startswith("table:") for k in a.extra_fields.keys())

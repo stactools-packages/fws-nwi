@@ -2,6 +2,7 @@ from pathlib import Path
 from typing import Dict, Optional
 
 import shapely.geometry
+from pyproj.enums import WktVersion
 from pystac import (
     Asset,
     Collection,
@@ -110,10 +111,9 @@ def create_item_from_assets(assets: Dict[str, Asset]) -> Item:
     projection = ProjectionExtension.ext(item, add_if_missing=True)
     epsg = metadata.crs.to_epsg()
     if epsg is None:
-        raise Exception(f"could not convert crs to epsg: {metadata.crs}")
+        projection.wkt2 = metadata.crs.to_wkt(WktVersion.WKT2_2019)
     else:
         projection.epsg = epsg
-    projection.bbox = metadata.bbox
 
     if any(
         any(k.startswith("table:") for k in a.extra_fields.keys())

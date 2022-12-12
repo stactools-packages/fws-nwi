@@ -34,7 +34,6 @@ def test_create_item(dc_zipfile: Path) -> None:
 
     projection = ProjectionExtension.ext(item)
     assert projection.epsg
-    assert projection.bbox
 
     assert "zip" in item.assets
 

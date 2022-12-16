@@ -11,6 +11,7 @@ from pystac import (
     Link,
     MediaType,
     SpatialExtent,
+    Summaries,
     TemporalExtent,
 )
 from pystac.extensions.item_assets import AssetDefinition, ItemAssetsExtension
@@ -33,6 +34,7 @@ from stactools.fws_nwi.constants import (
     ZIPFILE_ASSET_KEY,
 )
 from stactools.fws_nwi.metadata import Metadata
+from stactools.fws_nwi.states import States
 
 
 def create_collection() -> Collection:
@@ -50,6 +52,15 @@ def create_collection() -> Collection:
     )
     collection.add_links(
         [LINK_METADATA, LINK_FACT_SHEET, LINK_LANDING_PAGE, LINK_LICENSE]
+    )
+    collection.summaries = Summaries(
+        {
+            "fws_nwi:state": States.names(),
+            "fws_nwi:state_code": States.codes(),
+            "fws_nwi:content": ["riparian", "historic_wetlands", "wetlands"],
+        },
+        # Up the maxcount, otherwise the state arrays will be omitted from output
+        maxcount=len(States) + 1,
     )
 
     item_assets = ItemAssetsExtension.ext(collection, add_if_missing=True)

@@ -9,6 +9,7 @@ from stactools.fws_nwi import stac
 
 def test_create_collection() -> None:
     collection = stac.create_collection()
+    assert not collection.summaries.is_empty()
 
     item_assets = ItemAssetsExtension.ext(collection)
     assert "zip" in item_assets.item_assets

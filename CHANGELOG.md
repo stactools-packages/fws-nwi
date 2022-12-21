@@ -9,26 +9,21 @@ number as needed.
 
 ## [Unreleased]
 
+## [0.2.0] - 2022-12-21
+
 ### Added
 
 - Geoparquet creation with GeoPandas ([#13](https://github.com/stactools-packages/fws-nwi/pull/13))
 - Item assets extension ([#14](https://github.com/stactools-packages/fws-nwi/pull/14))
 
-### Deprecated
-
-- Nothing.
-
 ### Removed
 
 - Custom shapefile -> geoparquet conversion ([#13](https://github.com/stactools-packages/fws-nwi/pull/13))
-
-### Fixed
-
-- Nothing.
 
 ## [0.1.0]
 
 - First release
 
-[Unreleased]: <https://github.com/stactools-packages/fws-nwi/tree/main/>
+[Unreleased]: <https://github.com/stactools-packages/fws-nwi/compare/v0.2.0..main/>
+[0.2.0]: <https://github.com/stactools-packages/fws-nwi/compare/v0.1.0..v0.2.0>
 [0.1.0]: <https://github.com/stactools-packages/fws-nwi/tree/v0.1.0/>
